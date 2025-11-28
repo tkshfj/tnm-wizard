@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNM Wizard - 病理診断文生成</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TNM Wizard</h1>
+            <p class="subtitle">癌取扱い規約準拠 病理診断文生成システム<br>
+            <small>Synoptic Cancer Pathology Diagnostic Paragraph Generator</small></p>
+        </header>
+
+        <main>
+            <form method="POST" class="tnm-form">
+                <section class="form-section">
+                    <h2>組織型 / Histological Type</h2>
+                    <div class="form-group">
+                        <label for="histological_type">組織型:</label>
+                        <select name="histological_type" id="histological_type">
+                            {% for key, value in histological_types.items() %}
+                            <option value="{{ key }}" {% if form_data.get('histological_type') == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="differentiation">分化度:</label>
+                        <select name="differentiation" id="differentiation">
+                            {% for key, value in differentiation_grades.items() %}
+                            <option value="{{ key }}" {% if form_data.get('differentiation') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>腫瘍情報 / Tumor Information</h2>
+                    <div class="form-group">
+                        <label for="location">占拠部位:</label>
+                        <input type="text" name="location" id="location" placeholder="例: 胃体部" value="{{ form_data.get('location', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="tumor_size">腫瘍最大径:</label>
+                        <input type="text" name="tumor_size" id="tumor_size" placeholder="例: 35mm" value="{{ form_data.get('tumor_size', '') }}">
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>TNM分類 / TNM Classification</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="t_stage">T (原発腫瘍):</label>
+                            <select name="t_stage" id="t_stage">
+                                {% for key, value in t_stages.items() %}
+                                <option value="{{ key }}" {% if form_data.get('t_stage') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="n_stage">N (所属リンパ節):</label>
+                            <select name="n_stage" id="n_stage">
+                                {% for key, value in n_stages.items() %}
+                                <option value="{{ key }}" {% if form_data.get('n_stage') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="m_stage">M (遠隔転移):</label>
+                            <select name="m_stage" id="m_stage">
+                                {% for key, value in m_stages.items() %}
+                                <option value="{{ key }}" {% if form_data.get('m_stage') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>脈管侵襲 / Vascular Invasion</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lymphatic_invasion">リンパ管侵襲:</label>
+                            <select name="lymphatic_invasion" id="lymphatic_invasion">
+                                {% for key, value in lymphatic_invasion.items() %}
+                                <option value="{{ key }}" {% if form_data.get('lymphatic_invasion') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="venous_invasion">静脈侵襲:</label>
+                            <select name="venous_invasion" id="venous_invasion">
+                                {% for key, value in venous_invasion.items() %}
+                                <option value="{{ key }}" {% if form_data.get('venous_invasion') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>切除断端 / Resection Margin</h2>
+                    <div class="form-group">
+                        <label for="margin_status">断端状況:</label>
+                        <select name="margin_status" id="margin_status">
+                            {% for key, value in margin_status.items() %}
+                            <option value="{{ key }}" {% if form_data.get('margin_status') == key %}selected{% endif %}>{{ key }}: {{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2>その他の所見 / Additional Findings</h2>
+                    <div class="form-group">
+                        <label for="additional_findings">追記事項:</label>
+                        <textarea name="additional_findings" id="additional_findings" rows="3" placeholder="その他の病理所見を記入">{{ form_data.get('additional_findings', '') }}</textarea>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">診断文を生成 / Generate Report</button>
+                    <button type="reset" class="btn-secondary">リセット / Reset</button>
+                </div>
+            </form>
+
+            {% if result %}
+            <section class="result-section">
+                <h2>生成された診断文 / Generated Diagnostic Report</h2>
+                <div class="result-box">
+                    <pre>{{ result }}</pre>
+                </div>
+                <div class="result-actions">
+                    <button onclick="copyToClipboard()" class="btn-copy">クリップボードにコピー / Copy to Clipboard</button>
+                </div>
+            </section>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>TNM Wizard - 癌取扱い規約に準拠した病理診断文生成システム</p>
+            <p><small>Based on the Japanese General Rules for Clinical and Pathological Study of Cancer</small></p>
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const resultText = document.querySelector('.result-box pre').textContent;
+            navigator.clipboard.writeText(resultText).then(function() {
+                alert('コピーしました / Copied to clipboard!');
+            }, function(err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = resultText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('コピーしました / Copied to clipboard!');
+                } catch (e) {
+                    alert('コピーに失敗しました / Copy failed');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+    </script>
+</body>
+</html>
