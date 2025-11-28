@@ -1,13 +1,21 @@
 organ: lung
-display_name: "肺"
-version: "PoC lung v1"
+display_name: "Lung Cancer"
+version: "肺癌取扱い規約第9版"
 
 sections:
   - id: basic
     title: "基本情報"
     fields:
+      - name: modality
+        label: "手術法"
+        type: select
+        options:
+          - { code: "肺葉切除術", label: "肺葉切除術" }
+          - { code: "部分切除術", label: "部分切除術" }
+          - { code: "区域切除術", label: "区域切除術" }
+          - { code: "肺全摘術", label: "肺全摘術" }
       - name: lobe
-        label: "葉"
+        label: "占拠部位"
         type: select
         options:
           - { code: "右上葉", label: "右上葉" }
@@ -22,38 +30,169 @@ sections:
       - name: invasion_size
         label: "浸潤径(mm)"
         type: number
-
+      - name: histologic_type
+        label: "組織型"
+        type: select
+        options:
+          - { code: "腺癌", label: "腺癌" }
+          - { code: "扁平上皮癌", label: "扁平上皮癌" }
+          - { code: "大細胞癌", label: "大細胞癌" }
+          - { code: "神経内分泌腫瘍", label: "神経内分泌腫瘍" }
+      - name: histologic_subtype
+        label: "組織型亜分類"
+        type: select
+        options:
+          - { code: "乳頭腺癌", label: "乳頭腺癌" }
+          - { code: "粘液産生腺癌", label: "粘液産生腺癌" }
+          - { code: "微小乳頭腺癌", label: "微小乳頭腺癌" }
+          - { code: "管状腺癌", label: "管状腺癌" }
+          - { code: "低分化腺癌", label: "低分化腺癌" }
+          - { code: "その他", label: "その他" }
+      - name: histologic_description
+        label: "組織学的記載"
+        type: free_text
+        input_width: "30rem"  # "400px"
+      - name: grade
+        label: "Grade"
+        type: radio
+        options:
+          - { code: "G1", label: "G1" }
+          - { code: "G2", label: "G2" }
+          - { code: "G3", label: "G3" }
+          - { code: "NA", label: "NA", default: true }
+      - name: stas
+        label: "STAS"
+        type: radio
+        default: "NA"
+        options:
+          - { code: "STAS-0", label: "STAS-0" }
+          - { code: "STAS-1", label: "STAS-1" }
+          - { code: "STAS-X", label: "STAS-X" }
+          - { code: "NA", label: "NA", default: true }
+      - name: rm
+        label: "切除マージンまでの距離(mm)"
+        type: number
+      - name: pm
+        label: "肺内転移"
+        type: radio
+        options:
+          - { code: "pm0", label: "pm0", help: "肺内転移を認めない" }
+          - { code: "pm1", label: "pm1", help: "原発巣と同一肺葉のみに肺内転移を認める" }
+          - { code: "pm2", label: "pm2", help: "原発巣と同側の異なる肺葉に肺内転移を認める" }
+          - { code: "pm3", label: "pm3", help: "原発巣の対側肺に肺内転移を認める" }
+      - name: pl
+        label: "胸膜浸潤"
+        type: radio
+        options:
+          - { code: "pl0", label: "pl0", help: "癌組織が臓側胸膜外弾性板を越えていない" }
+          - { code: "pl1", label: "pl1", help: "癌組織が臓側胸膜外弾性板を超えて浸潤しているが、臓側胸膜表面に達していない" }
+          - { code: "pl2", label: "pl2", help: "癌組織が臓側胸膜表面に露出している" }
+          - { code: "pl3", label: "pl3", help: "癌組織が壁側胸膜を越えて胸壁、横隔膜、縦隔臓器、または羊羹を越えて隣接肺葉に浸潤している" }
+      - name: ly
+        label: "リンパ管侵襲"
+        type: radio
+        options:
+          - { code: "Ly0", label: "Ly0", help: "" }
+          - { code: "Ly1", label: "Ly1", help: "" }
+          - { code: "LyX", label: "LyX", help: "" }
+      - name: v
+        label: "血管侵襲"
+        type: radio
+        options:
+          - { code: "V0", label: "V0", help: "" }
+          - { code: "V1", label: "V1", help: "" }
+          - { code: "VX", label: "VX", help: "" }
+      - name: pn
+        label: "神経周囲侵襲"
+        type: radio
+        options:
+          - { code: "Pn0", label: "Pn0", help: "" }
+          - { code: "Pn1", label: "Pn1", help: "" }
+          - { code: "PnX", label: "PnX", help: "" }
+      - name: e
+        label: "胸水細胞診"
+        type: radio
+        options:
+          - { code: "E-", label: "E(-)", help: "" }
+          - { code: "Pn1", label: "Pn1", help: "" }
+          - { code: "PnX", label: "PnX", default: true, help: "" }
   - id: tnm
-    title: "TNM 分類"
+    title: "TNM分類"
     fields:
       - name: pT
         label: "pT"
         type: radio
         options:
-          - { code: "pT1a", label: "pT1a" }
-          - { code: "pT1b", label: "pT1b" }
-          - { code: "pT2a", label: "pT2a" }
-          - { code: "pT2b", label: "pT2b" }
+          - { code: "T0", label: "T0", help: "原発腫瘍を認めない" }
+          - { code: "Tis", label: "Tis", help: "上皮内癌：浸潤成分を認めない" }
+          - { code: "T1mi", label: "T1mi", help: "微小浸潤性腺癌：最大充実成分径 ≤ 0.5 cmでかつ病変全体径 ≤ 3 cm" }
+          - { code: "T1a", label: "T1a", help: "最大充実成分径 ≤ 1 cm" }
+          - { code: "T1b", label: "T1b", help: "最大充実成分径 > 1-2 cm" }
+          - { code: "T1c", label: "T1c", help: "最大充実成分径 > 2-3 cm" }
+          - { code: "T2a", label: "T2a", help: "最大充実成分径 > 3-4 cm、または最大充実成分径 ≤ 3cmで以下のいずれかであるもの: 臓側胸膜浸潤、隣接する肺葉に浸潤、腫瘍が主気管支に及ぶが気管分岐部には及ばないか、肺門まで連続する部分的または一側全体の無気肺か閉塞性肺炎がある" }
+          - { code: "T2b", label: "T2b", help: "最大充実成分径 > 4-5 cm" }
+          - { code: "T3", label: "T3", help: "最大充実成分径 > 5-7 cmまたは大きさを問わず以下のいずれかであるもの: " }
+          - { code: "T4", label: "T4", help: "腫瘍が以下を満たす場合：最大充実成分径 > 7 cmまたは大きさを問わず以下のいずれかであるもの: " }
+          - { code: "TX", label: "TX", help: "原発腫瘍の局在を判定できない" }
       - name: pN
         label: "pN"
         type: radio
         options:
-          - { code: "N0", label: "pN0" }
-          - { code: "N1", label: "pN1" }
+          - { code: "N0", label: "N0", help: "所属リンパ節転移なし" }
+          - { code: "N1", label: "N1", help: "同側肺門・気管支周囲・肺内リンパ節転移" }
+          - { code: "N2a", label: "N2a", help: "同側縦隔・気管分岐下リンパ節転移: 単一N2ステーションへの転移" }
+          - { code: "N2b", label: "N2b", help: "同側縦隔・気管分岐下リンパ節転移: 複数N2ステーションへの転移" }
+          - { code: "N3", label: "N3", help: "対側縦隔・対側肺門・同側または対側の斜角筋・鎖骨上窩リンパ節への転移" }
+          - { code: "NX", label: "NX", help: "所属リンパ節評価不能" }
       - name: pM
         label: "pM"
         type: radio
         options:
-          - { code: "cM0", label: "cM0" }
-          - { code: "cM1a", label: "cM1a" }
-
-# 超簡略の stage テーブル（PoC 用）
+          - { code: "M0", label: "M0", help: "遠隔転移なし" }
+          - { code: "M1a", label: "M1a", help: "同側/対側肺内多発結節や悪性胸水・心嚢水" }
+          - { code: "M1b", label: "M1b", help: "単一遠隔臓器転移" }
+          - { code: "M1c", label: "M1c", help: "複数遠隔臓器転移／複数病変" }
+# Stage
 tnm_stage_table:
+  "Tis,N0,M0": "Stage 0"
+  "T1mi,N0,M0": "Stage IA1"
   "T1a,N0,M0": "Stage IA1"
   "T1b,N0,M0": "Stage IA2"
+  "T1c,N0,M0": "Stage IA3"
   "T2a,N0,M0": "Stage IB"
+  "T1a,N1,M0": "Stage IIA"
+  "T1b,N1,M0": "Stage IIA"
+  "T1c,N1,M0": "Stage IIA"
   "T2b,N0,M0": "Stage IIA"
-  "T1a,N1,M0": "Stage IIB"
-  "T1b,N1,M0": "Stage IIB"
+  "T1a,N2a,M0": "Stage IIB"
+  "T1b,N2a,M0": "Stage IIB"
+  "T1c,N2a,M0": "Stage IIB"
+  "T2a,N1,M0": "Stage IIB"
+  "T2b,N1,M0": "Stage IIB"
+  "T3,N0,M0": "Stage IIB"
+  "T1a,N2b,M0": "Stage IIIA"
+  "T1b,N2b,M0": "Stage IIIA"
+  "T1c,N2b,M0": "Stage IIIA"
+  "T2a,N2a,M0": "Stage IIIA"
+  "T2b,N2a,M0": "Stage IIIA"
+  "T3,N1,M0": "Stage IIIA"
+  "T3,N2a,M0": "Stage IIIA"
+  "T4,N0,M0": "Stage IIIA"
+  "T4,N1,M0": "Stage IIIA"
+  "T1a,N3,M0": "Stage IIIB"
+  "T1b,N3,M0": "Stage IIIB"
+  "T1c,N3,M0": "Stage IIIB"
+  "T2a,N2b,M0": "Stage IIIB"
+  "T2a,N3,M0": "Stage IIIB"
+  "T2b,N2b,M0": "Stage IIIB"
+  "T2b,N3,M0": "Stage IIIB"
+  "T3,N2b,M0": "Stage IIIB"
+  "T4,N2a,M0": "Stage IIIB"
+  "T4,N2b,M0": "Stage IIIB"
+  "T3,N3,M0": "Stage IIIC"
+  "T4,N3,M0": "Stage IIIC"
+  "T*,N*,M1a": "Stage IVA"
+  "T*,N*,M1b": "Stage IVA"
+  "T*,N*,M1c": "Stage IVB"
 
 template: "lung_report.j2"

@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
 import yaml
+import re
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -20,6 +21,7 @@ class OrganConfig:
     def __init__(self, cfg: dict):
         self.organ = cfg["organ"]
         self.display_name = cfg.get("display_name", self.organ)
+        self.version = cfg.get("version", "")
         self.sections = cfg["sections"]
         self.template_name = cfg["template"]
         # TNM stage table: can be dict or JSON file
@@ -49,13 +51,29 @@ FORM_CONFIGS = load_all_configs()
 
 
 def derive_stage(organ_cfg: OrganConfig, pT: str, pN: str, pM: str) -> str:
-    """Very simple TNM -> stage lookup for PoC."""
-    # Normalize: pT1a -> T1a, pN0 -> N0 etc.
+    """TNM -> stage lookup with simple wildcard support.
+    - Exact match has priority (e.g. 'T1a,N0,M0')
+    - If no exact match, try patterns with '*' such as 'T*,N*,M1*'
+    """
     t = pT.replace("p", "")
     n = pN.replace("p", "")
     m = pM.replace("p", "")
     key = f"{t},{n},{m}"
-    return organ_cfg.stage_table.get(key, "Stage ?")
+    table = organ_cfg.stage_table
+    # 1. Exact match
+    if key in table:
+        return table[key]
+    # 2. Wildcard patterns: treat '*' as '.*' in a regex
+    for pattern, stage in table.items():
+        if "*" not in pattern:
+            continue
+        # Escape regex special chars except '*', then replace '*' with '.*'
+        # Split not strictly necessary here; simple global replace is enough:
+        regex_pattern = "^" + re.escape(pattern).replace("\\*", ".*") + "$"
+        if re.match(regex_pattern, key):
+            return stage
+    # 3. Fallback
+    return "Stage ?"
 
 
 def extract_fields(form, organ_cfg: OrganConfig) -> dict:
@@ -105,6 +123,7 @@ async def generate_report(request: Request, organ: str):
 
     form = await request.form()
     data = extract_fields(form, cfg)
+    data["version"] = cfg.version
 
     if "pT" in data and "pN" in data and "pM" in data:
         data["stage"] = derive_stage(cfg, data["pT"], data["pN"], data["pM"])

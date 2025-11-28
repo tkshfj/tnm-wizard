@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>{{ config.display_name }} TNM ウィザード</title>
+  <title>{{ config.display_name }} TNM Wizard</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>{{ config.display_name }} TNM ウィザード</h1>
+  <h1>{{ config.display_name }} TNM Wizard</h1>
 
   <form method="post" action="/{{ config.organ }}/generate">
     {% for section in config.sections %}
@@ -14,13 +14,19 @@
         <legend>{{ section.title }}</legend>
         {% for field in section.fields %}
           <div class="field">
-            <label>{{ field.label }}</label><br>
+            <label>{{ field.label }}: </label>
             {% if field.type == "radio" %}
               {% for opt in field.options %}
-                <label>
+                <label
+                  {% if opt.help %}
+                    title="{{ opt.help }}"
+                  {% endif %}
+                  class="radio-option"
+                >
                   <input type="radio"
                          name="{{ field.name }}"
                          value="{{ opt.code }}"
+                         {% if opt.default %}checked{% endif %}
                          required>
                   {{ opt.label }}
                 </label>
@@ -32,7 +38,15 @@
                 {% endfor %}
               </select>
             {% elif field.type == "number" %}
-              <input type="number" step="0.1" name="{{ field.name }}">
+              <input type="number" step="1" name="{{ field.name }}">
+            {% elif field.type == "free_text" %}
+              <input
+                type="text"
+                name="{{ field.name }}"
+                {% if field.input_width %}
+                  style="width: {{ field.input_width }};"
+                {% endif %}
+              >
             {% else %}
               <input type="text" name="{{ field.name }}">
             {% endif %}

@@ -1,7 +1,22 @@
-{# PoC-level simple report #}
-{{ data.lobe }}肺腫瘍
+{# Lung cancer synoptic report #}
+手術法: {{ data.modality }}
+占拠部位: {{ data.lobe }}
 
-腫瘍径 {{ "%.1f"|format(data.tumor_size or 0) }} mm
-浸潤径 {{ "%.1f"|format(data.invasion_size or 0) }} mm
+腫瘍径 {{ "%.0f"|format(data.tumor_size or 0) }} mm
+浸潤径 {{ "%.0f"|format(data.invasion_size or 0) }} mm
 
-{{ data.pT }}{{ data.pN }}{{ data.pM }}（pStage {{ data.stage }}）。
+組織型: {{ data.histologic_type }}
+組織型亜分類: {{ data.histologic_subtype }}
+組織学的記載: {{ data.histologic_description }}
+Grade: {{ data.grade }}
+STAS: {{ data.stas }}
+切除マージンまでの距離(mm): {{ "%.0f"|format(data.margin_distance or 0) }}
+肺内転移: {{ data.pm }}
+胸膜浸潤: {{ data.pl }}
+リンパ管侵襲: {{ data.ly }}
+血管侵襲: {{ data.v }}
+神経周囲侵襲: {{ data.pn }}
+
+病期分類: p{{ data.pT }}{{ data.pN }}{{ data.pM }} ({{ data.stage }})
+
+準拠: {{ data.version }}
