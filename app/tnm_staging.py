@@ -82,14 +82,13 @@ def get_stage_group(t_stage: str, n_stage: str, m_stage: str) -> str:
         return "Stage I"
     if t_stage == "T2" and n_stage == "N0":
         return "Stage IIA"
-    if t_stage == "T3" and n_stage == "N0":
+    if t_stage in ("T3", "T4", "T4a", "T4b") and n_stage == "N0":
         return "Stage IIB"
-    if t_stage in ("T1", "T1a", "T1b", "T2") and n_stage in ("N1", "N2"):
+    # Stage III: Any T1-T4 with positive lymph nodes (N1-N3)
+    n_positive = n_stage in ("N1", "N2", "N3", "N3a", "N3b")
+    t_valid = t_stage in ("T1", "T1a", "T1b", "T2", "T3", "T4", "T4a", "T4b")
+    if t_valid and n_positive:
         return "Stage III"
-    if t_stage in ("T3", "T4", "T4a", "T4b") and n_stage in ("N1", "N2", "N3", "N3a", "N3b"):
-        return "Stage III"
-    if t_stage in ("T4", "T4a", "T4b") and n_stage == "N0":
-        return "Stage IIB"
     return "Stage cannot be determined"
 
 

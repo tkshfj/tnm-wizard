@@ -36,6 +36,11 @@ pip install -r requirements.txt
 python run.py
 ```
 
+For development with debug mode enabled:
+```bash
+FLASK_DEBUG=true python run.py
+```
+
 4. Open your web browser and navigate to:
 ```
 http://localhost:5000
@@ -53,9 +58,10 @@ http://localhost:5000
 
 ## Production Deployment
 
-For production deployment on an intranet, use gunicorn:
+For production deployment on an intranet, use gunicorn with a proper secret key:
 
 ```bash
+export SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
 gunicorn -w 4 -b 0.0.0.0:5000 run:app
 ```
 
