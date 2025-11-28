@@ -1,0 +1,59 @@
+organ: lung
+display_name: "肺"
+version: "PoC lung v1"
+
+sections:
+  - id: basic
+    title: "基本情報"
+    fields:
+      - name: lobe
+        label: "葉"
+        type: select
+        options:
+          - { code: "右上葉", label: "右上葉" }
+          - { code: "中葉", label: "中葉" }
+          - { code: "右下葉", label: "右下葉" }
+          - { code: "左上葉", label: "左上葉" }
+          - { code: "舌区", label: "舌区" }
+          - { code: "左下葉", label: "左下葉" }
+      - name: tumor_size
+        label: "腫瘍径(mm)"
+        type: number
+      - name: invasion_size
+        label: "浸潤径(mm)"
+        type: number
+
+  - id: tnm
+    title: "TNM 分類"
+    fields:
+      - name: pT
+        label: "pT"
+        type: radio
+        options:
+          - { code: "pT1a", label: "pT1a" }
+          - { code: "pT1b", label: "pT1b" }
+          - { code: "pT2a", label: "pT2a" }
+          - { code: "pT2b", label: "pT2b" }
+      - name: pN
+        label: "pN"
+        type: radio
+        options:
+          - { code: "N0", label: "pN0" }
+          - { code: "N1", label: "pN1" }
+      - name: pM
+        label: "pM"
+        type: radio
+        options:
+          - { code: "cM0", label: "cM0" }
+          - { code: "cM1a", label: "cM1a" }
+
+# 超簡略の stage テーブル（PoC 用）
+tnm_stage_table:
+  "T1a,N0,M0": "Stage IA1"
+  "T1b,N0,M0": "Stage IA2"
+  "T2a,N0,M0": "Stage IB"
+  "T2b,N0,M0": "Stage IIA"
+  "T1a,N1,M0": "Stage IIB"
+  "T1b,N1,M0": "Stage IIB"
+
+template: "lung_report.j2"

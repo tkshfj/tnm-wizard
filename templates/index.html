@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TNM Wizard PoC</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>TNM Wizard PoC</h1>
+  <p>臓器を選択してください。</p>
+  <ul>
+    {% for organ in organs %}
+      <li><a href="/{{ organ.code }}">{{ organ.label }}</a></li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

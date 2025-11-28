@@ -1,0 +1,7 @@
+{# PoC-level simple report #}
+{{ data.lobe }}肺腫瘍
+
+腫瘍径 {{ "%.1f"|format(data.tumor_size or 0) }} mm
+浸潤径 {{ "%.1f"|format(data.invasion_size or 0) }} mm
+
+{{ data.pT }}{{ data.pN }}{{ data.pM }}（pStage {{ data.stage }}）。
