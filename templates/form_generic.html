@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>{{ config.display_name }} TNM Wizard</title>
   <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/visibility.js" defer></script>
 </head>
 <body>
   <h1>{{ config.display_name }} TNM Wizard</h1>
@@ -13,7 +14,13 @@
       <fieldset>
         <legend>{{ section.title }}</legend>
         {% for field in section.fields %}
-          <div class="field">
+          <div class="field"
+              data-field-name="{{ field.name }}"
+              {% if field.visible_if %}
+                data-visible-if-field="{{ field.visible_if['field'] }}"
+                data-visible-if-values="{{ field.visible_if['values'] | join(',') }}"
+              {% endif %}
+          >
             <label>{{ field.label }}: </label>
             {% if field.type == "radio" %}
               {% for opt in field.options %}

@@ -11,8 +11,8 @@ sections:
         type: select
         options:
           - { code: "肺葉切除術", label: "肺葉切除術" }
-          - { code: "部分切除術", label: "部分切除術" }
           - { code: "区域切除術", label: "区域切除術" }
+          - { code: "部分切除術", label: "部分切除術" }
           - { code: "肺全摘術", label: "肺全摘術" }
       - name: lobe
         label: "占拠部位"
@@ -72,6 +72,11 @@ sections:
       - name: rm
         label: "切除マージンまでの距離(mm)"
         type: number
+        visible_if:
+          field: modality
+          values:
+            - "区域切除術"
+            - "部分切除術"
       - name: pm
         label: "肺内転移"
         type: radio
