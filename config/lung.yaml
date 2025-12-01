@@ -210,9 +210,9 @@ sections:
         options:
           - { code: "M0", label: "M0", help: "遠隔転移なし" }
           - { code: "M1a", label: "M1a", help: "同側/対側肺内多発結節や悪性胸水・心嚢水" }
-          - { code: "M1b", label: "M1b", help: "単一遠隔臓器転移" }
-          - { code: "M1c", label: "M1c", help: "複数遠隔臓器転移／複数病変" }
-
+          - { code: "M1b", label: "M1b", help: "胸腔外一臓器への単発遠隔転移" }
+          - { code: "M1c1", label: "M1c1", help: "胸腔外一臓器への多発転移" }
+          - { code: "M1c2", label: "M1c2", help: "胸腔外多臓器への多発転移" }
       - name: effect
         label: "病理学的治療効果判定"
         type: radio
