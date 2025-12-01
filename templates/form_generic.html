@@ -9,57 +9,178 @@
 <body>
   <h1>{{ config.display_name }} TNM Wizard</h1>
 
+  {# --- macro for generic fields (unchanged) --- #}
+  {% macro render_input(field) %}
+    {% if field.type == "radio" %}
+      {% set default_value = field.default or "" %}
+      {% for opt in field.options %}
+        <label
+          {% if opt.help %} title="{{ opt.help }}"{% endif %}
+          class="radio-option"
+        >
+          <input
+            type="radio"
+            name="{{ field.name }}"
+            value="{{ opt.code }}"
+            {% if opt.code == default_value or opt.default %}checked{% endif %}
+            required
+          >
+          {{ opt.label }}
+        </label>
+      {% endfor %}
+
+    {% elif field.type == "select" %}
+      <select name="{{ field.name }}">
+        {% for opt in field.options %}
+          <option value="{{ opt.code }}">{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+
+    {% elif field.type == "checkbox" %}
+      {% if field.options %}
+        {# multi-choice checkboxes #}
+        {% for opt in field.options %}
+          <label class="checkbox-option"
+                 {% if opt.help %}title="{{ opt.help }}"{% endif %}>
+            <input type="checkbox" name="{{ field.name }}" value="{{ opt.code }}">
+            {{ opt.label }}
+          </label>
+        {% endfor %}
+      {% else %}
+        {# single boolean checkbox #}
+        <label class="checkbox-option">
+          <input type="checkbox" name="{{ field.name }}" value="true">
+          {{ field.label }}
+        </label>
+      {% endif %}
+
+    {% elif field.type == "number" %}
+      <input
+        type="number"
+        min="0"
+        step="{{ field.step or 1 }}"
+        name="{{ field.name }}"
+        {% if field.input_width %}style="width: {{ field.input_width }};"{% endif %}
+      >
+      <span>mm</span>
+
+    {% elif field.type == "free_text" %}
+      <input
+        type="text"
+        name="{{ field.name }}"
+        {% if field.input_width %}style="width: {{ field.input_width }};"{% endif %}
+      >
+
+    {% elif field.type == "textarea" %}
+      <textarea
+        name="{{ field.name }}"
+        rows="{{ field.rows or 2 }}"
+        class="{{ field.css_class or '' }}"
+      ></textarea>
+
+    {% else %}
+      <input type="text" name="{{ field.name }}">
+    {% endif %}
+  {% endmacro %}
+
+  {# --- macro to render all fields in a section (handles nodal_stations specially) --- #}
+  {% macro render_section_fields(section) %}
+    {% for field in section.fields %}
+
+      {% if field.type == "nodal_stations" %}
+        <div class="field nodal-stations">
+          <label>{{ field.label }}:</label>
+
+          {% for st in field.stations %}
+            {% set chk_name      = "LN" ~ st.code %}
+            {% set positive_name = "LN" ~ st.code ~ "_positive" %}
+            {% set total_name    = "LN" ~ st.code ~ "_total" %}
+
+            <div class="nodal-row">
+              {# Column 1: checkbox + station name, fixed-width cell #}
+              <label class="station-cell">
+                <input type="checkbox" name="{{ chk_name }}" value="true">
+                <span class="station-code">{{ st.label }}</span>
+              </label>
+
+              {# Column 2: positive count #}
+              <input
+                type="number"
+                name="{{ positive_name }}"
+                class="nodal-input"
+                min="0"
+                step="1"
+                style="width: 3.0rem;"
+                placeholder="positive"
+                data-visible-if-field="{{ chk_name }}"
+                data-visible-if-values="true"
+              >
+
+              {# Column 3: slash #}
+              <span
+                class="nodal-slash"
+                data-visible-if-field="{{ chk_name }}"
+                data-visible-if-values="true"
+              >/</span>
+
+              {# Column 4: total count #}
+              <input
+                type="number"
+                name="{{ total_name }}"
+                class="nodal-input"
+                min="0"
+                step="1"
+                style="width: 3.0rem;"
+                placeholder="total"
+                data-visible-if-field="{{ chk_name }}"
+                data-visible-if-values="true"
+              >
+            </div>
+          {% endfor %}
+        </div>
+
+      {% else %}
+        {# generic fields #}
+        <div class="field"
+             data-field-name="{{ field.name }}"
+             {% if field.visible_if %}
+               data-visible-if-field="{{ field.visible_if['field'] }}"
+               data-visible-if-values="{{ field.visible_if['values'] | join(',') }}"
+             {% endif %}
+        >
+          {# For single boolean checkbox, label is rendered inside render_input #}
+          {% if not (field.type == "checkbox" and not field.options) %}
+            <label>{{ field.label }}:</label>
+          {% endif %}
+          {{ render_input(field) }}
+        </div>
+      {% endif %}
+
+    {% endfor %}
+  {% endmacro %}
+
   <form method="post" action="/{{ config.organ }}/generate">
     {% for section in config.sections %}
-      <fieldset>
-        <legend>{{ section.title }}</legend>
-        {% for field in section.fields %}
-          <div class="field"
-              data-field-name="{{ field.name }}"
-              {% if field.visible_if %}
-                data-visible-if-field="{{ field.visible_if['field'] }}"
-                data-visible-if-values="{{ field.visible_if['values'] | join(',') }}"
-              {% endif %}
-          >
-            <label>{{ field.label }}: </label>
-            {% if field.type == "radio" %}
-              {% for opt in field.options %}
-                <label
-                  {% if opt.help %}
-                    title="{{ opt.help }}"
-                  {% endif %}
-                  class="radio-option"
-                >
-                  <input type="radio"
-                         name="{{ field.name }}"
-                         value="{{ opt.code }}"
-                         {% if opt.default %}checked{% endif %}
-                         required>
-                  {{ opt.label }}
-                </label>
-              {% endfor %}
-            {% elif field.type == "select" %}
-              <select name="{{ field.name }}">
-                {% for opt in field.options %}
-                  <option value="{{ opt.code }}">{{ opt.label }}</option>
-                {% endfor %}
-              </select>
-            {% elif field.type == "number" %}
-              <input type="number" step="1" name="{{ field.name }}">
-            {% elif field.type == "free_text" %}
-              <input
-                type="text"
-                name="{{ field.name }}"
-                {% if field.input_width %}
-                  style="width: {{ field.input_width }};"
-                {% endif %}
-              >
-            {% else %}
-              <input type="text" name="{{ field.name }}">
-            {% endif %}
-          </div>
-        {% endfor %}
-      </fieldset>
+
+      {% if section.id == "nodal_metastasis" %}
+        {# Collapsible section for nodal metastasis #}
+        <details class="section-collapsible" open>
+          <summary>{{ section.title }}</summary>
+          <fieldset>
+            {# optional: visually-hidden legend class="sr-only" #}
+            <legend style="display:none">{{ section.title }}</legend>
+            {{ render_section_fields(section) }}
+          </fieldset>
+        </details>
+
+      {% else %}
+        {# Normal (non-collapsible) sections #}
+        <fieldset>
+          <legend>{{ section.title }}</legend>
+          {{ render_section_fields(section) }}
+        </fieldset>
+      {% endif %}
+
     {% endfor %}
 
     <button type="submit">診断文を生成</button>

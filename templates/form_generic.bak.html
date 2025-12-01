@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ config.display_name }} TNM Wizard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/visibility.js" defer></script>
+</head>
+<body>
+  <h1>{{ config.display_name }} TNM Wizard</h1>
+
+  <form method="post" action="/{{ config.organ }}/generate">
+    {% for section in config.sections %}
+      <fieldset>
+        <legend>{{ section.title }}</legend>
+        {% for field in section.fields %}
+          <div class="field"
+              data-field-name="{{ field.name }}"
+              {% if field.visible_if %}
+                data-visible-if-field="{{ field.visible_if['field'] }}"
+                data-visible-if-values="{{ field.visible_if['values'] | join(',') }}"
+              {% endif %}
+          >
+            <label>{{ field.label }}: </label>
+            {% if field.type == "radio" %}
+              {% set default_value = field.default or "" %}
+              {% for opt in field.options %}
+                <label
+                  {% if opt.help %}
+                    title="{{ opt.help }}"
+                  {% endif %}
+                  class="radio-option"
+                >
+                  <input type="radio"
+                         name="{{ field.name }}"
+                         value="{{ opt.code }}"
+                         {% if opt.default %}checked{% endif %}
+                         required>
+                  {{ opt.label }}
+                </label>
+              {% endfor %}
+            {% elif field.type == "select" %}
+              <select name="{{ field.name }}">
+                {% for opt in field.options %}
+                  <option value="{{ opt.code }}">{{ opt.label }}</option>
+                {% endfor %}
+              </select>
+
+            {% elif field.type == "checkbox" %}
+              {% if field.options %}
+                {# multi-choice checkboxes #}
+                {% for opt in field.options %}
+                  <label class="checkbox-option"
+                        {% if opt.help %}title="{{ opt.help }}"{% endif %}>
+                    <input
+                      type="checkbox"
+                      name="{{ field.name }}"
+                      value="{{ opt.code }}"
+                    >
+                    {{ opt.label }}
+                  </label>
+                {% endfor %}
+              {% else %}
+                {# single boolean checkbox #}
+                <label class="checkbox-option">
+                  <input
+                    type="checkbox"
+                    name="{{ field.name }}"
+                    value="true"
+                  >
+                  {{ field.label }}
+                </label>
+              {% endif %}
+
+              {% elif field.type == "number" %}
+              <input type="number" step="1" name="{{ field.name }}">
+            {% elif field.type == "free_text" %}
+              <input
+                type="text"
+                name="{{ field.name }}"
+                {% if field.input_width %}
+                  style="width: {{ field.input_width }};"
+                {% endif %}
+              >
+            {% else %}
+              <input type="text" name="{{ field.name }}">
+            {% endif %}
+          </div>
+        {% endfor %}
+
+      </fieldset>
+    {% endfor %}
+
+    <button type="submit">診断文を生成</button>
+  </form>
+
+  <p><a href="/">戻る</a></p>
+</body>
+</html>
+
+
+        {% if section.id == "nodal_metastasis" %}
+          <div class="field-row">
+            {# LN1R, LN1R+, LN1R# will show/hide as configured #}
+          </div>
+        {% endif %}

@@ -16,7 +16,15 @@ STAS: {{ data.stas }}
 リンパ管侵襲: {{ data.ly }}
 血管侵襲: {{ data.v }}
 神経周囲侵襲: {{ data.pn }}
+{% if data.nodal_summary %}
+リンパ節転移: {{ data.nodal_summary }}
+{% else %}
+リンパ節転移: 記載なし
+{% endif %}
+{% if data.metastatic_sites %}
+遠隔転移部位: {{ data.metastatic_sites | join(', ') }}
+{% endif %}
 
 病期分類: p{{ data.pT }}{{ data.pN }}{{ data.pM }} ({{ data.stage }})
 
-準拠: {{ data.version }}
+{{ data.version }} 準拠

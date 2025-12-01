@@ -25,11 +25,13 @@ sections:
           - { code: "舌区", label: "舌区" }
           - { code: "左下葉", label: "左下葉" }
       - name: tumor_size
-        label: "腫瘍径(mm)"
+        label: "病変全体径"
         type: number
+        input_width: 3.0rem;
       - name: invasion_size
-        label: "浸潤径(mm)"
+        label: "最大充実成分径"
         type: number
+        input_width: 3.0rem;
       - name: histologic_type
         label: "組織型"
         type: select
@@ -70,8 +72,9 @@ sections:
           - { code: "STAS-X", label: "STAS-X" }
           - { code: "NA", label: "NA", default: true }
       - name: rm
-        label: "切除マージンまでの距離(mm)"
+        label: "切除マージンまでの距離"
         type: number
+        input_width: 3.0rem;
         visible_if:
           field: modality
           values:
@@ -121,6 +124,46 @@ sections:
           - { code: "E-", label: "E(-)", help: "" }
           - { code: "Pn1", label: "Pn1", help: "" }
           - { code: "PnX", label: "PnX", default: true, help: "" }
+      - name: metastatic_sites
+        label: "転移臓器"
+        type: checkbox
+        options:
+          - { code: "PUL", label: "肺" }
+          - { code: "MAR", label: "骨髄" }
+          - { code: "OSS", label: "骨" }
+          - { code: "PLE", label: "胸膜" }
+          - { code: "LYM", label: "リンパ節" }
+          - { code: "HEP", label: "肝" }
+          - { code: "PER", label: "腹膜" }
+          - { code: "BRA", label: "脳" }
+          - { code: "ADR", label: "副腎" }
+          - { code: "SKI", label: "皮膚" }
+          - { code: "OTH", label: "その他" }
+  - id: nodal_metastasis
+    title: "リンパ節転移"
+    fields:
+      - name: nodal_stations
+        label: "リンパ節"
+        type: nodal_stations
+        stations:
+          - { code: "1R", label: "1R" }
+          - { code: "1L", label: "1L" }
+          - { code: "2R", label: "2R" }
+          - { code: "2L", label: "2L" }
+          - { code: "3a", label: "3a" }
+          - { code: "3p", label: "3p" }
+          - { code: "4R", label: "4R" }
+          - { code: "4L", label: "4L" }
+          - { code: "5", label: "5" }
+          - { code: "6", label: "6" }
+          - { code: "7", label: "7" }
+          - { code: "8", label: "8" }
+          - { code: "9", label: "9" }
+          - { code: "10", label: "10" }
+          - { code: "11", label: "11" }
+          - { code: "12", label: "12" }
+          - { code: "13", label: "13" }
+          - { code: "14", label: "14" }
   - id: tnm
     title: "TNM分類"
     fields:
@@ -157,6 +200,7 @@ sections:
           - { code: "M1a", label: "M1a", help: "同側/対側肺内多発結節や悪性胸水・心嚢水" }
           - { code: "M1b", label: "M1b", help: "単一遠隔臓器転移" }
           - { code: "M1c", label: "M1c", help: "複数遠隔臓器転移／複数病変" }
+
 # Stage
 tnm_stage_table:
   "Tis,N0,M0": "Stage 0"

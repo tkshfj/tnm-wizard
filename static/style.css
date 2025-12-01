@@ -12,6 +12,92 @@ fieldset {
   margin-bottom: 0.5rem;
 }
 
+.nodal-stations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+
+.nodal-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Fixed-width station column (checkbox + code) */
+.station-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 3.5rem;       /* adjust width as needed: enough for "10R" etc. */
+}
+
+/* Just the text "1R", "9", "10", ... */
+.station-code {
+  min-width: 2.0rem;
+  text-align: right;   /* this gives nice alignment for 1, 9, 10, 11… */
+  font-feature-settings: "tnum"; /* helps with tabular numbers where supported */
+}
+
+/* Hide positive/total by default; JS will set inline-flex when visible */
+.nodal-extra {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nodal-input {
+  width: 3ch;          /* compact numeric boxes */
+  text-align: right;
+  padding: 0.1rem 0.2rem;
+  box-sizing: border-box;
+}
+
+.nodal-slash  { text-align: center; }
+
+/* Accessible "screen reader only" class for legend inside details */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Collapsible section */
+.section-collapsible {
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem 0.5rem; /* leaves space for summary + fieldset */
+}
+
+/* The clickable header line */
+.section-collapsible > summary {
+  cursor: pointer;
+  font-weight: bold;
+  list-style: none; /* avoid extra bullets in some browsers */
+  outline: none;
+}
+
+/* Remove default triangle if we want a custom one */
+/* Hide default marker in Firefox */
+summary::marker { content: ""; }
+/* Hide default marker in Chrome / Edge / Safari */
+summary::-webkit-details-marker { display: none; }
+
+/* Optional: indent content a bit under the summary */
+.section-collapsible > fieldset {
+  margin-top: 0.5rem;
+  border: none;
+  padding: 0;
+}
+
 button {
   padding: 0.3rem 0.8rem;
   font-size: 0.9rem;

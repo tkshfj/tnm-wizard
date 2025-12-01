@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import yaml
 import re
-
+from typing import Mapping, Dict, Any
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -30,7 +30,7 @@ class OrganConfig:
         if isinstance(tnm, dict):
             self.stage_table = tnm
         elif isinstance(tnm, str):
-            # if you later want JSON/YAML files, handle here
+            # if we later want JSON/YAML files, handle here
             path = CONFIG_DIR / tnm
             if path.suffix == ".json":
                 self.stage_table = json.loads(path.read_text(encoding="utf-8"))
@@ -81,14 +81,74 @@ def extract_fields(form, organ_cfg: OrganConfig) -> dict:
     for section in organ_cfg.sections:
         for field in section["fields"]:
             name = field["name"]
-            value = form.get(name)
-            if field.get("type") == "number" and value not in (None, ""):
+            ftype = field.get("type")
+            has_options = bool(field.get("options"))
+            if ftype == "checkbox":
+                if has_options:
+                    # multi-select
+                    value = form.getlist(name)
+                else:
+                    value = form.get(name) == "true"
+            else:
+                value = form.get(name)
+            if ftype == "number" and value not in (None, "", []):
                 try:
                     value = float(value)
                 except ValueError:
                     value = None
             data[name] = value
     return data
+
+
+def build_nodal_summary(form_data: Mapping[str, str]) -> str:
+    """
+    Parse LNxx_positive / LNxx_total pairs from the form data and build a
+    compact summary like: '1R (1/3), 3p (2/4)'.
+
+    Expected field names:
+      - LN1R_positive, LN1R_total
+      - LN1L_positive, LN1L_total
+      - LN2R_positive, LN2R_total
+      - ...
+    and so on, for all stations defined in lung.yaml.
+    """
+    summary_parts = []
+
+    POS_SUFFIX = "_positive"
+    TOTAL_SUFFIX = "_total"
+
+    for key, pos_val in form_data.items():
+        # Only keys ending with "_positive" are of interest
+        if not key.endswith(POS_SUFFIX):
+            continue
+
+        pos_val = (pos_val or "").strip()
+        if pos_val == "":
+            # nothing entered, skip
+            continue
+
+        base = key[:-len(POS_SUFFIX)]  # e.g. "LN1R" from "LN1R_positive"
+        total_key = f"{base}{TOTAL_SUFFIX}"
+        total_val = (form_data.get(total_key) or "").strip()
+
+        # Optional: only include stations that were *checked* (LNxx = "true")
+        checkbox_val = (form_data.get(base) or "").strip()
+        if checkbox_val.lower() not in {"true", "on", "1"}:
+            # If we *only* want stations where the checkbox was checked, uncomment:
+            # continue
+            # For now we allow it if positive is filled, even if checkbox missing
+            pass
+
+        # Human label: strip "LN" prefix if present → "1R", "3p" etc.
+        label = base[2:] if base.startswith("LN") else base
+
+        if total_val:
+            summary_parts.append(f"{label} ({pos_val}/{total_val})")
+        else:
+            # If total is missing, still show positives
+            summary_parts.append(f"{label}({pos_val}/?)")
+
+    return ", ".join(summary_parts)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -117,20 +177,64 @@ async def show_form(request: Request, organ: str):
 
 @app.post("/{organ}/generate", response_class=HTMLResponse)
 async def generate_report(request: Request, organ: str):
+    # 1. Look up form configuration
     cfg = FORM_CONFIGS.get(organ)
-    if not cfg:
+    if cfg is None:
         return HTMLResponse("Unknown organ", status_code=404)
 
+    # 2. Read raw form data once
     form = await request.form()
+    form_dict: Dict[str, Any] = dict(form)
+
+    # 3. Extract structured fields according to config
     data = extract_fields(form, cfg)
-    data["version"] = cfg.version
 
-    if "pT" in data and "pN" in data and "pM" in data:
-        data["stage"] = derive_stage(cfg, data["pT"], data["pN"], data["pM"])
+    # 4. Version (supports cfg.version or cfg["version"])
+    version = getattr(cfg, "version", None)
+    if version is None and isinstance(cfg, dict):
+        version = cfg.get("version")
+    if version is not None:
+        data["version"] = version
 
-    report_text = templates.get_template(cfg.template_name).render(data=data)
+    # 5. Detect whether this organ has nodal_stations and build summary
+    #    cfg.sections is a list of dicts; each section is like {"id": ..., "title": ..., "fields": [...]}
+    sections = getattr(cfg, "sections", None)
+    if sections is None and isinstance(cfg, dict):
+        sections = cfg.get("sections", [])
 
+    has_nodal_stations = any(
+        isinstance(field, dict) and field.get("type") == "nodal_stations"
+        for section in (sections or [])
+        if isinstance(section, dict)
+        for field in section.get("fields", [])
+    )
+
+    if has_nodal_stations:
+        data["nodal_summary"] = build_nodal_summary(form_dict)
+    else:
+        data["nodal_summary"] = ""
+
+    # 6. Derive TNM stage if all components are present
+    pT = data.get("pT")
+    pN = data.get("pN")
+    pM = data.get("pM")
+    if pT and pN and pM:
+        data["stage"] = derive_stage(cfg, pT, pN, pM)
+
+    # 7. Render diagnostic text
+    template = templates.get_template(
+        getattr(cfg, "template_name", None)
+        if not isinstance(cfg, dict)
+        else cfg.get("template_name")
+    )
+    report_text = template.render(data=data)
+
+    # 8. Render result page
     return templates.TemplateResponse(
         "result.html",
-        {"request": request, "report_text": report_text, "organ": organ},
+        {
+            "request": request,
+            "report_text": report_text,
+            "organ": organ,
+        },
     )
