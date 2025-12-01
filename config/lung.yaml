@@ -25,11 +25,11 @@ sections:
           - { code: "舌区", label: "舌区" }
           - { code: "左下葉", label: "左下葉" }
       - name: tumor_size
-        label: "病変全体径"
+        label: "病変全体径(mm)"
         type: number
         input_width: 3.0rem;
       - name: invasion_size
-        label: "最大充実成分径"
+        label: "最大充実成分径(mm)"
         type: number
         input_width: 3.0rem;
       - name: histologic_type
@@ -72,7 +72,7 @@ sections:
           - { code: "STAS-X", label: "STAS-X" }
           - { code: "NA", label: "NA", default: true }
       - name: rm
-        label: "切除マージンまでの距離"
+        label: "切除マージンまでの距離(mm)"
         type: number
         input_width: 3.0rem;
         visible_if:
@@ -117,13 +117,25 @@ sections:
           - { code: "Pn0", label: "Pn0", help: "" }
           - { code: "Pn1", label: "Pn1", help: "" }
           - { code: "PnX", label: "PnX", help: "" }
-      - name: e
+      - name: effusion_cytology
         label: "胸水細胞診"
         type: radio
         options:
-          - { code: "E-", label: "E(-)", help: "" }
-          - { code: "Pn1", label: "Pn1", help: "" }
-          - { code: "PnX", label: "PnX", default: true, help: "" }
+          - { code: "neg",         label: "E(-)",   help: "Negative cytology" }
+          - { code: "equivocal",   label: "E(±)",   help: "Equivocal / atypical cells" }
+          - { code: "pos",         label: "E(+)",   help: "Positive for malignancy" }
+          - { code: "inadequate",  label: "E(不適)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "not_examined", label: "E(未検)", default: true, help: "Cytology not performed" }
+      - name: PLC
+        label: "胸腔内洗浄細胞診"
+        type: radio
+        options:
+          - { code: "neg",         label: "PLC(-)",   help: "Negative cytology" }
+          - { code: "equivocal",   label: "PLC(±)",   help: "Equivocal / atypical cells" }
+          - { code: "pos",         label: "PLC(+)",   help: "Positive for malignancy" }
+          - { code: "inadequate",  label: "PLC(不適正)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "not_examined", label: "PLC(未検)", default: true, help: "Cytology not performed" }
+
       - name: metastatic_sites
         label: "転移臓器"
         type: checkbox
@@ -200,6 +212,35 @@ sections:
           - { code: "M1a", label: "M1a", help: "同側/対側肺内多発結節や悪性胸水・心嚢水" }
           - { code: "M1b", label: "M1b", help: "単一遠隔臓器転移" }
           - { code: "M1c", label: "M1c", help: "複数遠隔臓器転移／複数病変" }
+
+      - name: effect
+        label: "病理学的治療効果判定"
+        type: radio
+        options:
+          - { code: "Ef.0", label: "Ef.0", help: "無効: 癌組織(腫瘍床)に治療による編成、壊死などの携帯学的変化を認めない" }
+          - { code: "Ef.1a", label: "Ef.1a", help: "ごく軽度の効果: 癌組織(腫瘍床)の2/3以上が生存し得ると判断される癌細胞で占められている" }
+          - { code: "Ef.1b", label: "Ef.1b", help: "軽度の効果: 癌組織(腫瘍床)の1/3以上2/3未満に生存し得ると判断される癌細胞が認められる" }
+          - { code: "Ef.2", label: "Ef.2", help: "中等度の効果: 癌組織(腫瘍床)の1/3未満に生存し得ると判断される癌細胞が残存している" }
+          - { code: "Ef.2-MPR", label: "Ef.2-MPR", help: "中等度の効果: Major pathologic response: RVTが10%以下の場合" }
+          - { code: "Ef.3", label: "Ef.3-MPR", help: "著効: 癌細胞が腫瘍床において全く認められないか、残存していても生存し得ないと判断される" }
+          - { code: "Ef.3-pCR", label: "Ef.3-pCR", help: "著効: RVTが0かつリンパ節などにもRVTが存在しない場合" }
+          - { code: "NA", label: "術前治療非施行例", default: true, help: "術前治療非施行例" }
+      - name: rvt
+        label: "残存生存腫瘍率(RVT %)"
+        type: number
+        min: 0
+        max: 100
+        step: 1
+        input_width: 3.0rem;
+        visible_if:
+          field: effect
+          values:
+            - "Ef.1a"
+            - "Ef.1b"
+            - "Ef.2"
+            - "Ef.2-MPR"
+            - "Ef.3"
+            - "Ef.3-pCR"
 
 # Stage
 tnm_stage_table:
