@@ -50,10 +50,11 @@ sections:
           - { code: "管状腺癌", label: "管状腺癌" }
           - { code: "低分化腺癌", label: "低分化腺癌" }
           - { code: "その他", label: "その他" }
-      - name: histologic_description
+      - name: description
         label: "組織学的記載"
-        type: free_text
-        input_width: "30rem"  # "400px"
+        type: textarea
+        rows: 3
+        css_class: "description-textarea"
       - name: grade
         label: "Grade"
         type: radio
@@ -135,7 +136,64 @@ sections:
           - { code: "pos",         label: "PLC(+)",   help: "Positive for malignancy" }
           - { code: "inadequate",  label: "PLC(不適正)", help: "Inadequate / unsatisfactory specimen" }
           - { code: "not_examined", label: "PLC(未検)", default: true, help: "Cytology not performed" }
-
+      - name: R
+        label: "残存病変"
+        type: radio
+        options:
+          - { code: "R0", label: "R0", default: true, help: "残存なし" }
+          - { code: "R0(un)", label: "R0(un)", help: "残存不確定" }
+          - { code: "R1", label: "R1", help: "残存不確定" }
+          - { code: "R1(un)", label: "R1(un)", help: "顕微鏡的残存" }
+          - { code: "R2", label: "R2", help: "肉眼的残存" }
+          - { code: "RX", label: "RX", help: "不明" }
+      - name: d
+        label: "胸膜播種"
+        type: radio
+        options:
+          - { code: "neg", label: "d(-)", default: true, help: "" }
+          - { code: "pos", label: "d(+)", help: "" }
+      - name: br
+        label: "気管支断端"
+        type: radio
+        options:
+          - { code: "neg", label: "br(-)", default: true, help: "" }
+          - { code: "pos", label: "br(+)", help: "" }
+      - name: pa
+        label: "肺動脈断端"
+        type: radio
+        options:
+          - { code: "neg", label: "pa(-)", default: true, help: "" }
+          - { code: "pos", label: "pa(+)", help: "" }
+      - name: pv
+        label: "肺静脈断端"
+        type: radio
+        options:
+          - { code: "neg", label: "pv(-)", default: true, help: "" }
+          - { code: "pos", label: "pv(+)", help: "" }
+      - name: cw
+        label: "胸壁断端"
+        type: radio
+        options:
+          - { code: "neg", label: "cw(-)", default: true, help: "" }
+          - { code: "pos", label: "cw(+)", help: "" }
+      - name: pp
+        label: "壁側胸膜断端"
+        type: radio
+        options:
+          - { code: "neg", label: "pp(-)", default: true, help: "" }
+          - { code: "pos", label: "pp(+)", help: "" }
+      - name: medp
+        label: "縦隔胸膜断端"
+        type: radio
+        options:
+          - { code: "neg", label: "medp(-)", default: true, help: "" }
+          - { code: "pos", label: "medp(+)", help: "" }
+      - name: medft
+        label: "縦隔脂肪織断端"
+        type: radio
+        options:
+          - { code: "neg", label: "medft(-)", default: true, help: "" }
+          - { code: "pos", label: "medft(+)", help: "" }
       - name: metastatic_sites
         label: "転移臓器"
         type: checkbox
@@ -217,6 +275,7 @@ sections:
         label: "病理学的治療効果判定"
         type: radio
         options:
+          - { code: "NA", label: "術前治療非施行例", default: true, help: "術前治療非施行例" }
           - { code: "Ef.0", label: "Ef.0", help: "無効: 癌組織(腫瘍床)に治療による編成、壊死などの携帯学的変化を認めない" }
           - { code: "Ef.1a", label: "Ef.1a", help: "ごく軽度の効果: 癌組織(腫瘍床)の2/3以上が生存し得ると判断される癌細胞で占められている" }
           - { code: "Ef.1b", label: "Ef.1b", help: "軽度の効果: 癌組織(腫瘍床)の1/3以上2/3未満に生存し得ると判断される癌細胞が認められる" }
@@ -224,7 +283,6 @@ sections:
           - { code: "Ef.2-MPR", label: "Ef.2-MPR", help: "中等度の効果: Major pathologic response: RVTが10%以下の場合" }
           - { code: "Ef.3", label: "Ef.3-MPR", help: "著効: 癌細胞が腫瘍床において全く認められないか、残存していても生存し得ないと判断される" }
           - { code: "Ef.3-pCR", label: "Ef.3-pCR", help: "著効: RVTが0かつリンパ節などにもRVTが存在しない場合" }
-          - { code: "NA", label: "術前治療非施行例", default: true, help: "術前治療非施行例" }
       - name: rvt
         label: "残存生存腫瘍率(RVT %)"
         type: number

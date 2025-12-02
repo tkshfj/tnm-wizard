@@ -12,6 +12,17 @@ fieldset {
   margin-bottom: 0.5rem;
 }
 
+.description-textarea {
+  display: flex;
+  flex-direction: column;   /* stack label above textarea */
+  align-items: flex-start;  /* left-align both label and textarea */
+  width: 40rem;
+}
+
+.description-textarea > label {
+  margin-bottom: 0.25rem;   /* small gap between label and box */
+}
+
 .nodal-stations {
   display: flex;
   flex-direction: column;

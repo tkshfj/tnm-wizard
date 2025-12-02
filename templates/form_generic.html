@@ -140,7 +140,7 @@
 
       {% else %}
         {# generic fields #}
-        <div class="field"
+        <div class="field" {% if field.type == 'textarea' %}description-textarea{% endif %}
              data-field-name="{{ field.name }}"
              {% if field.visible_if %}
                data-visible-if-field="{{ field.visible_if['field'] }}"
