@@ -40,43 +40,128 @@ sections:
 
         types:
           - code: "AD"
-            label: "浸潤性腺癌"
+            label: "Invasive non-mucinous adenocarcinoma"
             subtypes:
-              - { code: "AD_pap",        label: "乳頭腺癌" }
-              - { code: "AD_acinar",     label: "腺房腺癌" }
-              - { code: "AD_lepidic",    label: "非浸潤性腺癌 lepidic" }
-              - { code: "AD_nonmuc",     label: "非浸潤性腺癌・粘液非産生" }
-              - { code: "AD_mucinous",   label: "粘液産生腺癌" }
-              - { code: "AD_other",      label: "その他（腺癌）" }
-          - code: "SQ"
-            label: "扁平上皮癌"
+              - { code: "AD_lepidic", label: "Lepidic adenocarcinoma" }
+              - { code: "AD_acinar", label: "Acinar adenocarcinoma" }
+              - { code: "AD_pap", label: "Papillary adenocarcinoma" }
+              - { code: "AD_micropap", label: "Micropapillary adenocarcinoma" }
+              - { code: "AD_solid", label: "Solid adenocarcinoma" }
+          - code: "IMA"
+            label: "Invasive mucinous adenocarcinoma"
             subtypes:
-              - { code: "SQ_keratin", label: "角化型" }
-              - { code: "SQ_nonker",  label: "非角化型" }
-              - { code: "SQ_basaloid",label: "基底細胞型" }
-          - code: "AIS"
-            label: "非浸潤性腺癌"
+              - { code: "IMA", label: "Invasive mucinous adenocarcinoma" }
+              - { code: "mixed_IMA", label: "Mixed invasive mucinous and non-mucinous adenocarcinoma" }
+          - code: "Other adenocarcinoma"
+            label: "Other adenocarcinoma"
             subtypes:
-              - { code: "AIS_nonmuc", label: "粘液非産生" }
-              - { code: "AIS_mucin",  label: "粘液産生" }
+              - { code: "Colloid adenocarcinoma", label: "Colloid adenocarcinoma" }
+              - { code: "Fetal adenocarcinoma", label: "Fetal adenocarcinoma" }
+              - { code: "Enteric-type adenocarcinoma", label: "Enteric-type adenocarcinoma" }
           - code: "MIA"
-            label: "微少浸潤性腺癌"
+            label: "Minimally invasive adenocarcinoma"
             subtypes:
-              - { code: "MIA_nonmuc", label: "粘液非産生" }
-              - { code: "MIA_mucin",  label: "粘液産生" }
+              - { code: "MIA_nonmuc", label: "Minimally invasive adenocarcinoma, nonmucinous" }
+              - { code: "MIA_mucin", label: "Minimally invasive adenocarcinoma, mucinous" }
+          - code: "AIS"
+            label: "Adenocarcinoma in situ"
+            subtypes:
+              - { code: "AIS_nonmucinous", label: "Adenocarcinoma in situ, nonmucinous" }
+              - { code: "AIS_mucinous", label: "Adenocarcinoma in situ, mucinous" }
+          - code: "AAH"
+            label: "Atypical adenomatous hyperplasia"
+            subtypes:
+              - { code: "AAH", label: "Atypical adenomatous hyperplasia" }
+          - code: "SQ"
+            label: "Squamous cell carcinoma"
+            subtypes:
+              - { code: "CIS", label: "Squamous dysplasia/squamous cell carcinoma in situ" }
+              - { code: "SQ_keratin", label: "Squamous cell carcinoma, keratinizing type" }
+              - { code: "SQ_nonker", label: "Squamous cell carcinoma, non-keratinizing type" }
+              - { code: "SQ_basaloid",label: "Basaloid squamous cell carcinoma" }
+              - { code: "LE",label: "Lymphoepithelial carcinoma" }              
           - code: "LCC"
-            label: "大細胞癌"
+            label: "Large cell carcinoma"
             subtypes:
-              - { code: "LCC_classic",         label: "大細胞癌" }
-              - { code: "LCC_other",           label: "その他（大細胞癌）"}
-          - code: "NET"
-            label: "神経内分泌腫瘍"
+              - { code: "Large cell carcinoma", label: "Large cell carcinoma" }
+          - code: "ASQ"
+            label: "Adenosquamous carcinoma"
             subtypes:
-            - { code: "NET_typical_carcinoid",      label: "定型カルチノイド" }
-            - { code: "NET_atypical_carcinoid",     label: "非定型カルチノイド" }
-            - { code: "NET_SCLC",                   label: "小細胞癌" }
-            - { code: "NET_LCNEC",                  label: "大細胞神経内分泌癌" }
-            - { code: "NET_other",                  label: "その他（神経内分泌腫瘍）" }
+              - { code: "Adenosquamous carcinoma", label: "Adenosquamous carcinoma" }
+          - code: "Neuroendocrine tumors"
+            label: "Neuroendocrine tumors"
+            subtypes:
+            - { code: "NET_DIPNECH", label: "Diffuse idiopathic pulmonary neuroendocrine cell hyperplasia" }
+            - { code: "NET_typical_carcinoid", label: "typical carcinoid/neuroendocrine tumor grade 1" }
+            - { code: "NET_atypical_carcinoid", label: "atypical carcinoid/neuroendocrine tumor grade 2" }
+            - { code: "SCLC", label: "Small cell carcinoma" }
+            - { code: "SCLC_combined", label: "Combined small cell carcinoma" }
+            - { code: "LCNEC", label: "Large cell neuroendocrine carcinoma" }
+            - { code: "LCNEC_combined", label: "Combined large cell neuroendocrine carcinoma" }
+
+          - code: "Bronchial papillomas"
+            label: "Bronchial papillomas"
+            subtypes:
+              - { code: "Bronchial papilloma", label: "Bronchial papilloma" }
+              - { code: "Squamous cell papilloma, NOS", label: "Squamous cell papilloma, NOS" }
+              - { code: "Glandular papilloma", label: "Glandular papilloma" }
+              - { code: "Mixed squamous cell and glandular papilloma", label: "Mixed squamous cell and glandular papilloma" }
+          - code: "Adenomas"
+            label: "Adenomas"
+            subtypes:
+              - { code: "Sclerosing pneumocytoma", label: "Sclerosing pneumocytoma" }
+              - { code: "Alveolar adenoma", label: "Alveolar adenoma" }
+              - { code: "Papillary adenoma", label: "Papillary adenoma" }
+              - { code: "Bronchiolar adenoma/ciliated muconodular papillary tumor", label: "Bronchiolar adenoma/ciliated muconodular papillary tumor" }
+              - { code: "Mucinous cystadenoma", label: "Mucinous cystadenoma" }
+              - { code: "Mucous gland adenoma", label: "Mucous gland adenoma" }
+
+          - code: "Sarcomatoid carcinomas"
+            label: "Sarcomatoid carcinomas"
+            subtypes:
+              - { code: "Pleomorphic", label: "Pleomorphic carcinoma" }
+              - { code: "Pulmonary blastoma", label: "Pulmonary blastoma" }
+              - { code: "Carcinosarcoma", label: "Carcinosarcoma" }
+          - code: "Other epithelial tumors"
+            label: "Other epithelial tumors"
+            subtypes:
+              - { code: "NUT", label: "NUT carcinoma" }
+              - { code: "SMARCA4", label: "Thoracic SMARCA4-deficient undifferentiated tumor" }
+          - code: "Salivary gland-type tumors"
+            label: "Salivary gland-type tumors"
+            subtypes:
+              - { code: "Pleomorphic adenoma", label: "Pleomorphic adenoma" }
+              - { code: "Adenod cystic carcinoma", label: "Adenoid cystic carcinoma" }
+              - { code: "Epithelial-myoepithelial carcinoma", label: "Epithelial-myoepithelial carcinoma" }
+              - { code: "Mucoepidermoid carcinoma", label: "Mucoepidermoid carcinoma" }
+              - { code: "Hyalinizing clear cell carcinoma", label: "Hyalinizing clear cell carcinoma" }
+              - { code: "Myoepithelioma", label: "Myoepithelioma" }
+              - { code: "Myoepithelial carcinoma", label: "Myoepithelial carcinoma" }
+          - code: "Tumors of ectopic tissues"
+            label: "Tumors of ectopic tissues"
+            subtypes:
+              - { code: "Melanoma", label: "Melanoma" }
+              - { code: "Meningioma", label: "Meningioma" }
+          - code: "Mesenchymal tumors"
+            label: "Mesenchymal tumors"
+            subtypes:
+              - { code: "Pulmonary hamartoma", label: "Pulmonary hamartoma" }
+              - { code: "Pulmonary chrondroma", label: "Pulmonary chondroma" }
+              - { code: "Diffuse pulmonary lymphangiomatosis", label: "Diffuse pulmonary lymphangiomatosis" }
+              - { code: "Pleuropulmonary blastoma", label: "Pleuropulmonary blastoma" }
+              - { code: "Pulmonary artery intimal sarcoma", label: "Pulmonary artery intimal sarcoma" }
+              - { code: "Pulmonary myxoid sarcoma with EWSR1-CREB1 fusion", label: "Pulmonary myxoid sarcoma with EWSR1-CREB1 fusion" }
+              - { code: "Lymphangiomyomatosis", label: "Lymphangiomyomatosis" }
+              - { code: "PEComa", label: "PEComa" }
+          - code: "Haematolymphoid tumors"
+            label: "Haematolymphoid tumors"
+            subtypes:
+              - { code: "MALT lymphoma", label: "MALT lymphoma" }
+              - { code: "Diffuse large B-cell lymphoma, NOS", label: "Diffuse large B-cell lymphoma, NOS" }
+              - { code: "Lymphomatoid granulomatosis, NOS, grade 1-3", label: "Lymphomatoid granulomatosis, NOS, grade 1-3" }
+              - { code: "Intravascular large B-cell lymphoma", label: "Intravascular large B-cell lymphoma" }
+              - { code: "Langerhans cell histiocytosis", label: "Langerhans cell histiocytosis" }
+              - { code: "Erdheim-Chester disease", label: "Erdheim-Chester disease" }
 
       - name: description
         label: "組織学的記載"

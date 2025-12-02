@@ -9,7 +9,7 @@
 <body>
   <h1>{{ config.display_name }} TNM Wizard</h1>
 
-  {# --- macro for generic fields --- #}
+  {# --- macro for generic fields (no histology-specific branching here) --- #}
   {% macro render_input(field) %}
     {% if field.type == "radio" %}
       {% set default_value = field.default or "" %}
@@ -50,59 +50,19 @@
 
     {% elif field.type == "checkbox" %}
       {% if field.options %}
-
-        {% if field.with_percent %}
-          {# checkbox + % pattern (kept for backward compatibility) #}
-          {% for opt in field.options %}
-            {% set pct_name = field.name ~ "_" ~ opt.code ~ "_pct" %}
-            <div class="histologic-subtype-row"
-                 {% if field.depends_on_histologic_type and opt.parent_type %}
-                   data-histologic-subtype-checkbox="true"
-                   data-parent-type="{{ opt.parent_type }}"
-                 {% endif %}
+        {# generic multi-choice checkboxes #}
+        {% for opt in field.options %}
+          <label class="checkbox-option"
+                 {% if opt.help %}title="{{ opt.help }}"{% endif %}
+          >
+            <input
+              type="checkbox"
+              name="{{ field.name }}"
+              value="{{ opt.code }}"
             >
-              <label class="checkbox-option">
-                <input
-                  type="checkbox"
-                  name="{{ field.name }}"
-                  value="{{ opt.code }}"
-                  class="histologic-subtype-checkbox"
-                  data-subtype-code="{{ opt.code }}"
-                >
-                {{ opt.label }}
-              </label>
-
-              <input
-                type="number"
-                name="{{ pct_name }}"
-                class="histologic-subtype-percent"
-                min="0"
-                max="100"
-                step="1"
-                placeholder="%"
-              >
-            </div>
-          {% endfor %}
-
-        {% else %}
-          {# multi-choice checkboxes #}
-          {% for opt in field.options %}
-            <label class="checkbox-option"
-                   {% if opt.help %}title="{{ opt.help }}"{% endif %}
-                   {% if field.depends_on_histologic_type and opt.parent_type %}
-                     data-histologic-subtype-checkbox="true"
-                     data-parent-type="{{ opt.parent_type }}"
-                   {% endif %}
-            >
-              <input
-                type="checkbox"
-                name="{{ field.name }}"
-                value="{{ opt.code }}"
-              >
-              {{ opt.label }}
-            </label>
-          {% endfor %}
-        {% endif %}
+            {{ opt.label }}
+          </label>
+        {% endfor %}
       {% else %}
         {# single boolean checkbox #}
         <label class="checkbox-option">
@@ -144,7 +104,7 @@
   {% macro render_section_fields(section) %}
     {% for field in section.fields %}
 
-      {# 1) unified histologic mix block (config-driven) #}
+      {# 1) unified histologic mix table (type/subtype/% rows) #}
       {% if field.type == "histologic_mix" %}
         <div class="field histologic-mix" id="histologic-mix">
           <label>{{ field.label }}:</label>
@@ -154,14 +114,14 @@
               <tr>
                 <th>組織型</th>
                 <th>組織亜型</th>
-                <th>割合(%)</th>
+                <th class="histologic-percent-header">割合(%)</th>
               </tr>
             </thead>
             <tbody>
               {% set max_rows = field.rows or 4 %}
               {% for i in range(1, max_rows + 1) %}
                 <tr class="histologic-mix-row" data-row-index="{{ i }}">
-                  {# type select #}
+                  {# 組織型 select #}
                   <td>
                     <select
                       name="histologic_type_{{ i }}"
@@ -175,7 +135,7 @@
                     </select>
                   </td>
 
-                  {# subtype select #}
+                  {# 組織亜型 select (options filtered per row by JS) #}
                   <td>
                     <select
                       name="histologic_subtype_{{ i }}"
@@ -196,7 +156,9 @@
                     </select>
                   </td>
 
-                  {# percent input #}
+                  {# 割合(%) input – JS will:
+                     - require + sum only when type = AD
+                     - hide/disable for non-AD #}
                   <td style="text-align: right;">
                     <input
                       type="number"
@@ -213,12 +175,12 @@
             </tbody>
           </table>
 
-          <small class="histologic-hint">
-            合計が 100% になるように入力します。主たる組織亜型は最大割合の組み合わせから自動判定されます。
+          <small class="histologic-hint" style="display:none;">
+            浸潤性非粘液性腺癌(AD)の場合、割合が 100% になるように入力します。主たる組織亜型は最大割合から自動判定されます。
           </small>
         </div>
 
-      {# 2) nodal stations block (unchanged) #}
+      {# 2) nodal stations block #}
       {% elif field.type == "nodal_stations" %}
         <div class="field nodal-stations">
           <label>{{ field.label }}:</label>
@@ -267,7 +229,7 @@
           {% endfor %}
         </div>
 
-      {# 3) generic fields, including description textarea #}
+      {# 3) generic fields, including description textarea with autofill button #}
       {% else %}
         <div class="field {% if field.type == 'textarea' %}description-textarea{% endif %}"
              data-field-name="{{ field.name }}"

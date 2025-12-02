@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const conditionalFields = document.querySelectorAll("[data-visible-if-field]");
 
   function getFieldValue(name) {
-    // There may be multiple elements with this name (radio/checkbox groups)
     const elements = document.querySelectorAll(`[name="${name}"]`);
     if (!elements.length) return "";
 
@@ -23,8 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return checked ? checked.value : "";
     }
 
-    // checkbox (single or group):
-    // interpret checked/unchecked uniformly as "true"/"false"
+    // checkbox (single or group): normalize to "true"/"false"
     if (el.type === "checkbox") {
       const checked = document.querySelector(`input[name="${name}"]:checked`);
       return checked ? "true" : "false";
@@ -69,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ============================================================
   // 2) (Legacy) Histologic type → subtype filtering
-  //    (for any old config that still uses histologic_type + dependent selects)
+  //    For old configs using histologic_type + dependent selects
   // ============================================================
   const histoTypeSelect = document.querySelector('select[name="histologic_type"]');
 
@@ -89,8 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       options.forEach((opt) => {
         const parent = opt.dataset.parentType || "";
-
-        // If parent_type is empty, treat as always visible
         const visible = !parent || parent === currentType;
 
         opt.hidden = !visible;
@@ -138,14 +134,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (histoTypeSelect) {
-    // initial filter on page load
     filterHistologicSubtypes();
-    // re-filter whenever histologic type changes
     histoTypeSelect.addEventListener("change", filterHistologicSubtypes);
   }
 
   // ============================================================
-  // 3) (Optional) Subtype percentage visibility toggling
+  // 3) (Legacy) Subtype percentage visibility toggling
   //    Only affects the "checkbox + % input" pattern
   // ============================================================
   const subtypeRows = document.querySelectorAll(".histologic-subtype-row");
@@ -166,75 +160,206 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // initial state
     syncPercentVisibility();
     checkbox.addEventListener("change", syncPercentVisibility);
   });
 
   // ============================================================
-  // 4) Histologic mix rows: type -> subtype filtering per row
+  // 4) New histologic mix table:
+  //    - type → subtype filtering per row
+  //    - AD-only percentages
+  //    - non-AD: only one row visible
+  //    - header / hint hidden when no AD
   // ============================================================
-  const mixRows = document.querySelectorAll(".histologic-mix-row");
+  const AD_CODE = "AD";  // must match YAML type.code for adenocarcinoma
+  const mixRows = Array.from(document.querySelectorAll(".histologic-mix-row"));
 
+  // Cache all subtype options per row (except placeholder)
   mixRows.forEach((row) => {
+    const subtypeSelect = row.querySelector(".histologic-subtype-select");
+    if (subtypeSelect && !row._allSubtypeOptions) {
+      row._allSubtypeOptions = Array.from(subtypeSelect.options).slice(1);
+    }
+  });
+
+  function updateRowSubtypes(row) {
     const typeSelect = row.querySelector(".histologic-type-select");
     const subtypeSelect = row.querySelector(".histologic-subtype-select");
     if (!typeSelect || !subtypeSelect) return;
 
-    // clone all subtype options (except the first placeholder "--")
-    const allOptions = Array.from(subtypeSelect.options).slice(1);
+    const allOptions = row._allSubtypeOptions;
+    if (!allOptions) return;
 
-    function updateSubtypes() {
-      const currentType = typeSelect.value;
-      const currentValue = subtypeSelect.value;
+    const currentType = typeSelect.value;
+    const currentValue = subtypeSelect.value;
 
-      // Remove all except placeholder
-      subtypeSelect.innerHTML = "";
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "--";
-      subtypeSelect.appendChild(placeholder);
+    // Reset to placeholder
+    subtypeSelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "--";
+    subtypeSelect.appendChild(placeholder);
 
-      // Re-add only matching options
-      const candidates = allOptions.filter((opt) => {
-        const parent = opt.dataset.parentType || "";
-        return !currentType || parent === currentType;
-      });
-
-      candidates.forEach((opt) => {
-        subtypeSelect.appendChild(opt.cloneNode(true));
-      });
-
-      // if previous value is still valid among candidates, keep it
-      if (
-        currentValue &&
-        Array.from(subtypeSelect.options).some((o) => o.value === currentValue)
-      ) {
-        subtypeSelect.value = currentValue;
-      }
-    }
-
-    updateSubtypes();
-    typeSelect.addEventListener("change", updateSubtypes);
-  });
-
-  // ============================================================
-  // 5) Optional: warn if total % != 100 for histologic mix
-  // ============================================================
-  function updateHistologicTotal() {
-    const inputs = document.querySelectorAll(".histologic-percent-input");
-    let total = 0;
-    inputs.forEach((input) => {
-      const v = parseFloat(input.value);
-      if (!isNaN(v)) total += v;
+    const candidates = allOptions.filter((opt) => {
+      const parent = opt.dataset.parentType || "";
+      return !currentType || parent === currentType;
     });
 
-    const hint = document.querySelector(".histologic-hint");
+    candidates.forEach((opt) => {
+      subtypeSelect.appendChild(opt.cloneNode(true));
+    });
+
+    if (
+      currentValue &&
+      Array.from(subtypeSelect.options).some((o) => o.value === currentValue)
+    ) {
+      subtypeSelect.value = currentValue;
+    }
+  }
+
+  function updateRowMode(row) {
+    const typeSelect = row.querySelector(".histologic-type-select");
+    const pctInput   = row.querySelector(".histologic-percent-input");
+    const pctCell    = pctInput ? pctInput.closest("td") : null;
+    if (!typeSelect || !pctInput) return;
+
+    const typeCode = typeSelect.value;
+
+    if (typeCode === AD_CODE) {
+      // AD: percentage used and required
+      pctInput.disabled = false;
+      pctInput.required = true;
+      pctInput.style.visibility = "visible";
+      if (pctCell) pctCell.style.display = "";      // show cell again
+    } else if (typeCode === "") {
+      // empty type: allow editing but not required
+      pctInput.disabled = false;
+      pctInput.required = false;
+      pctInput.style.visibility = "visible";
+      if (pctCell) pctCell.style.display = "";      // keep visible while no type chosen
+    } else {
+      // non-AD: percentage not used → hide entire cell
+      pctInput.value = "";
+      pctInput.disabled = true;
+      pctInput.required = false;
+      pctInput.style.visibility = "hidden";
+      if (pctCell) pctCell.style.display = "none";  // hide the td itself
+    }
+  }
+
+  // function updateRowMode(row) {
+  //   const typeSelect = row.querySelector(".histologic-type-select");
+  //   const pctInput = row.querySelector(".histologic-percent-input");
+  //   if (!typeSelect || !pctInput) return;
+
+  //   const typeCode = typeSelect.value;
+
+  //   if (typeCode === AD_CODE) {
+  //     // AD: percentage used and required
+  //     pctInput.disabled = false;
+  //     pctInput.required = true;
+  //     pctInput.style.visibility = "visible";
+  //   } else if (typeCode === "") {
+  //     // empty type: keep editable but not required
+  //     pctInput.disabled = false;
+  //     pctInput.required = false;
+  //     pctInput.style.visibility = "visible";
+  //   } else {
+  //     // non-AD: no percentage
+  //     pctInput.value = "";
+  //     pctInput.disabled = true;
+  //     pctInput.required = false;
+  //     pctInput.style.visibility = "hidden";
+  //   }
+  // }
+
+  // Only one non-AD row (the first) is allowed to stay visible.
+  function enforceNonADSingleRowRule() {
+    let firstNonADRow = null;
+
+    mixRows.forEach((row) => {
+      const typeSelect = row.querySelector(".histologic-type-select");
+      if (!typeSelect) return;
+      const typeCode = typeSelect.value;
+
+      if (typeCode && typeCode !== AD_CODE && !firstNonADRow) {
+        firstNonADRow = row;
+      }
+    });
+
+    if (!firstNonADRow) {
+      // No non-AD rows: all rows available for AD mixture
+      mixRows.forEach((row) => {
+        row.style.display = "";
+      });
+      return;
+    }
+
+    // Only first non-AD row stays; others are cleared + hidden
+    mixRows.forEach((row) => {
+      const typeSelect = row.querySelector(".histologic-type-select");
+      if (!typeSelect) return;
+
+      if (row === firstNonADRow) {
+        row.style.display = "";
+      } else {
+        const subtypeSelect = row.querySelector(".histologic-subtype-select");
+        const pctInput = row.querySelector(".histologic-percent-input");
+
+        typeSelect.value = "";
+        if (subtypeSelect) subtypeSelect.value = "";
+        if (pctInput) pctInput.value = "";
+        row.style.display = "none";
+      }
+    });
+  }
+
+  // AD-only histologic total; also controls header + hint visibility
+  function updateHistologicTotal() {
+    let total = 0;
+    let hasAD = false;
+
+    // Only AD rows contribute to total AND to "hasAD"
+    mixRows.forEach((row) => {
+      const typeSelect = row.querySelector(".histologic-type-select");
+      const pctInput   = row.querySelector(".histologic-percent-input");
+      if (!typeSelect || !pctInput) return;
+
+      if (typeSelect.value !== AD_CODE) {
+        return;  // skip non-AD and empty types
+      }
+
+      hasAD = true;
+
+      const v = parseFloat(pctInput.value);
+      if (!isNaN(v)) {
+        total += v;
+      }
+    });
+
+    const hint   = document.querySelector(".histologic-hint");
+    const header = document.querySelector(".histologic-percent-header");
+
+    // No AD rows at all: hide header + hint and clear text
+    if (!hasAD) {
+      if (header) header.style.display = "none";
+      if (hint) {
+        hint.style.display = "none";
+        hint.textContent   = "";
+        hint.style.color   = "";
+      }
+      return;
+    }
+
+    // AD rows exist → show header + hint
+    if (header) header.style.display = "";
     if (!hint) return;
+
+    hint.style.display = "";
 
     if (total === 0) {
       hint.textContent =
-        "合計が 100% になるように入力します。主たる組織亜型は最大割合から自動判定されます。";
+        "合計が 100% になるように入力します（AD のみ）。主たる組織亜型は最大割合から自動判定されます。";
       hint.style.color = "";
     } else if (Math.abs(total - 100) < 0.5) {
       hint.textContent = `現在の合計: 約 ${total.toFixed(1)}%`;
@@ -247,20 +372,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  document.addEventListener("input", (ev) => {
-    if (
-      ev.target.classList &&
-      ev.target.classList.contains("histologic-percent-input")
-    ) {
+  // Initialize histologic mix rows
+  mixRows.forEach((row) => {
+    const typeSelect = row.querySelector(".histologic-type-select");
+    const subtypeSelect = row.querySelector(".histologic-subtype-select");
+    const pctInput = row.querySelector(".histologic-percent-input");
+    if (!typeSelect || !subtypeSelect || !pctInput) return;
+
+    // initial setup
+    updateRowSubtypes(row);
+    updateRowMode(row);
+
+    typeSelect.addEventListener("change", () => {
+      updateRowSubtypes(row);
+      updateRowMode(row);
+      enforceNonADSingleRowRule();
       updateHistologicTotal();
-    }
+    });
+
+    pctInput.addEventListener("input", () => {
+      updateHistologicTotal();
+    });
   });
 
+  // Initial total check for AD
   updateHistologicTotal();
 
   // ============================================================
-  // 6) Histologic mix → description textarea helper
-  //    Build summary from DOM and write into textarea#description
+  // 5) Histologic mix → description textarea helper
   // ============================================================
   function buildHistologicSummaryFromDOM() {
     const rows = Array.from(document.querySelectorAll(".histologic-mix-row"));
@@ -270,14 +409,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const typeSel = row.querySelector(".histologic-type-select");
       const subtypeSel = row.querySelector(".histologic-subtype-select");
       const pctInput = row.querySelector(".histologic-percent-input");
-
       if (!typeSel || !subtypeSel || !pctInput) return;
 
-      const pctStr = (pctInput.value || "").trim();
       const typeCode = (typeSel.value || "").trim();
       const subtypeCode = (subtypeSel.value || "").trim();
+      const pctStr = (pctInput.value || "").trim();
 
-      // skip completely empty rows
+      // Skip empty rows
       if (!typeCode && !subtypeCode && !pctStr) return;
 
       const pct = parseFloat(pctStr);
@@ -287,7 +425,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (typeSel.options[typeSel.selectedIndex] &&
           typeSel.options[typeSel.selectedIndex].textContent.trim()) ||
         "";
-
       const subtypeLabel =
         (subtypeSel.options[subtypeSel.selectedIndex] &&
           subtypeSel.options[subtypeSel.selectedIndex].textContent.trim()) ||
@@ -304,52 +441,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!rowData.length) return "";
 
-    // primary = row with largest percentage
-    let primary = rowData[0];
-    rowData.forEach((r) => {
-      if (r.pct > primary.pct) {
-        primary = r;
-      }
-    });
+    const adRows = rowData.filter((r) => r.typeCode === AD_CODE && r.pct > 0);
+    const nonAdRows = rowData.filter(
+      (r) => r.typeCode && r.typeCode !== AD_CODE
+    );
 
     const parts = [];
 
-    // Primary: base type label
-    if (primary.typeLabel) {
-      parts.push(primary.typeLabel);
-    }
+    // AD mixture with %
+    if (adRows.length) {
+      let primary = adRows[0];
+      adRows.forEach((r) => {
+        if (r.pct > primary.pct) {
+          primary = r;
+        }
+      });
 
-    // Primary subtype with "(主 xx%)"
-    if (primary.subtypeLabel) {
-      parts.push(`${primary.subtypeLabel} (主 ${primary.pct.toFixed(0)}%)`);
-    } else if (primary.pct > 0) {
-      parts.push(`(主 ${primary.pct.toFixed(0)}%)`);
-    }
+      if (primary.typeLabel) {
+        parts.push(primary.typeLabel);
+      }
 
-    // Other rows
-    rowData.forEach((r) => {
-      if (r === primary || !r.pct) return;
+      if (primary.subtypeLabel) {
+        parts.push(`${primary.subtypeLabel} (主 ${primary.pct.toFixed(0)}%)`);
+      } else if (primary.pct > 0) {
+        parts.push(`(主 ${primary.pct.toFixed(0)}%)`);
+      }
 
-      const tLabel = r.typeLabel;
-      const sLabel = r.subtypeLabel;
-      const pctText = `${r.pct.toFixed(0)}%`;
+      adRows.forEach((r) => {
+        if (r === primary) return;
+        if (!r.pct) return;
 
-      // Same type as primary -> don't repeat type label
-      if (r.typeCode === primary.typeCode && primary.typeLabel) {
-        if (sLabel) {
-          parts.push(`${sLabel} ${pctText}`);
+        const pctText = `${r.pct.toFixed(0)}%`;
+        if (r.subtypeLabel) {
+          parts.push(`${r.subtypeLabel} ${pctText}`);
         } else {
           parts.push(pctText);
         }
-      } else {
-        // Different histologic type: show both if available
-        if (tLabel && sLabel) {
-          parts.push(`${tLabel} ${sLabel} ${pctText}`);
-        } else if (tLabel) {
-          parts.push(`${tLabel} ${pctText}`);
-        } else if (sLabel) {
-          parts.push(`${sLabel} ${pctText}`);
-        }
+      });
+    }
+
+    // Non-AD rows (no percentages, only one non-AD row should be visible)
+    nonAdRows.forEach((r) => {
+      if (r.typeLabel && r.subtypeLabel) {
+        parts.push(`${r.typeLabel} ${r.subtypeLabel}`);
+      } else if (r.typeLabel) {
+        parts.push(r.typeLabel);
+      } else if (r.subtypeLabel) {
+        parts.push(r.subtypeLabel);
       }
     });
 
@@ -367,7 +505,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const summary = buildHistologicSummaryFromDOM();
       if (!summary) return;
 
-      // overwrite; or change to append if we want to keep existing text
       textarea.value = summary;
       textarea.focus();
     });
