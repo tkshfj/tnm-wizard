@@ -12,6 +12,18 @@ fieldset {
   margin-bottom: 0.5rem;
 }
 
+.histologic-subtype-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.histologic-subtype-percent {
+  width: 4rem;
+  text-align: right;
+}
+
 .description-textarea {
   display: flex;
   flex-direction: column;   /* stack label above textarea */

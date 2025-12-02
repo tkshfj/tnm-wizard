@@ -1,6 +1,7 @@
 # Data
 .DS_Store
 refences/
+not_used/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

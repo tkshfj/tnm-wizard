@@ -32,24 +32,52 @@ sections:
         label: "最大充実成分径(mm)"
         type: number
         input_width: 3.0rem;
-      - name: histologic_type
+
+      - name: histologic_mix
         label: "組織型"
-        type: select
-        options:
-          - { code: "腺癌", label: "腺癌" }
-          - { code: "扁平上皮癌", label: "扁平上皮癌" }
-          - { code: "大細胞癌", label: "大細胞癌" }
-          - { code: "神経内分泌腫瘍", label: "神経内分泌腫瘍" }
-      - name: histologic_subtype
-        label: "組織型亜分類"
-        type: select
-        options:
-          - { code: "乳頭腺癌", label: "乳頭腺癌" }
-          - { code: "粘液産生腺癌", label: "粘液産生腺癌" }
-          - { code: "微小乳頭腺癌", label: "微小乳頭腺癌" }
-          - { code: "管状腺癌", label: "管状腺癌" }
-          - { code: "低分化腺癌", label: "低分化腺癌" }
-          - { code: "その他", label: "その他" }
+        type: histologic_mix
+        rows: 5   # max number of rows (e.g. 3–5)
+
+        types:
+          - code: "AD"
+            label: "浸潤性腺癌"
+            subtypes:
+              - { code: "AD_pap",        label: "乳頭腺癌" }
+              - { code: "AD_acinar",     label: "腺房腺癌" }
+              - { code: "AD_lepidic",    label: "非浸潤性腺癌 lepidic" }
+              - { code: "AD_nonmuc",     label: "非浸潤性腺癌・粘液非産生" }
+              - { code: "AD_mucinous",   label: "粘液産生腺癌" }
+              - { code: "AD_other",      label: "その他（腺癌）" }
+          - code: "SQ"
+            label: "扁平上皮癌"
+            subtypes:
+              - { code: "SQ_keratin", label: "角化型" }
+              - { code: "SQ_nonker",  label: "非角化型" }
+              - { code: "SQ_basaloid",label: "基底細胞型" }
+          - code: "AIS"
+            label: "非浸潤性腺癌"
+            subtypes:
+              - { code: "AIS_nonmuc", label: "粘液非産生" }
+              - { code: "AIS_mucin",  label: "粘液産生" }
+          - code: "MIA"
+            label: "微少浸潤性腺癌"
+            subtypes:
+              - { code: "MIA_nonmuc", label: "粘液非産生" }
+              - { code: "MIA_mucin",  label: "粘液産生" }
+          - code: "LCC"
+            label: "大細胞癌"
+            subtypes:
+              - { code: "LCC_classic",         label: "大細胞癌" }
+              - { code: "LCC_other",           label: "その他（大細胞癌）"}
+          - code: "NET"
+            label: "神経内分泌腫瘍"
+            subtypes:
+            - { code: "NET_typical_carcinoid",      label: "定型カルチノイド" }
+            - { code: "NET_atypical_carcinoid",     label: "非定型カルチノイド" }
+            - { code: "NET_SCLC",                   label: "小細胞癌" }
+            - { code: "NET_LCNEC",                  label: "大細胞神経内分泌癌" }
+            - { code: "NET_other",                  label: "その他（神経内分泌腫瘍）" }
+
       - name: description
         label: "組織学的記載"
         type: textarea
