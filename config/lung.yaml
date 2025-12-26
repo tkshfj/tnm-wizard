@@ -238,8 +238,8 @@ sections:
           - { code: "neg",         label: "E(-)",   help: "Negative cytology" }
           - { code: "equivocal",   label: "E(±)",   help: "Equivocal / atypical cells" }
           - { code: "pos",         label: "E(+)",   help: "Positive for malignancy" }
-          - { code: "inadequate",  label: "E(不適)", help: "Inadequate / unsatisfactory specimen" }
-          - { code: "not_examined", label: "E(未検)", default: true, help: "Cytology not performed" }
+          - { code: "inadequate",  label: "E(inadequate)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "not_examined", label: "E(not perfomed)", default: true, help: "Cytology not performed" }
       - name: PLC
         label: "胸腔内洗浄細胞診"
         type: radio
@@ -247,8 +247,8 @@ sections:
           - { code: "neg",         label: "PLC(-)",   help: "Negative cytology" }
           - { code: "equivocal",   label: "PLC(±)",   help: "Equivocal / atypical cells" }
           - { code: "pos",         label: "PLC(+)",   help: "Positive for malignancy" }
-          - { code: "inadequate",  label: "PLC(不適正)", help: "Inadequate / unsatisfactory specimen" }
-          - { code: "not_examined", label: "PLC(未検)", default: true, help: "Cytology not performed" }
+          - { code: "inadequate",  label: "PLC(inadequate)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "not_examined", label: "PLC(not perfomed)", default: true, help: "Cytology not performed" }
       - name: R
         label: "残存病変"
         type: radio
@@ -454,6 +454,6 @@ tnm_stage_table:
   "T4,N3,M0": "Stage IIIC"
   "T*,N*,M1a": "Stage IVA"
   "T*,N*,M1b": "Stage IVA"
-  "T*,N*,M1c": "Stage IVB"
+  "T*,N*,M1c*": "Stage IVB"
 
 template: "lung_report.j2"

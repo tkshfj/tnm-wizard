@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>{{ config.display_name }} TNM Wizard</title>
   <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/visibility.js" defer></script>
+  <script type="module" src="/static/visibility.js"></script>
 </head>
 <body>
   <h1>{{ config.display_name }} TNM Wizard</h1>
@@ -107,7 +107,7 @@
       {# 1) unified histologic mix table (type/subtype/% rows) #}
       {% if field.type == "histologic_mix" %}
         <div class="field histologic-mix" id="histologic-mix">
-          <label>{{ field.label }}:</label>
+          <span class="field-label">{{ field.label }}:</span>
 
           <table class="histologic-mix-table">
             <thead>
@@ -183,7 +183,7 @@
       {# 2) nodal stations block #}
       {% elif field.type == "nodal_stations" %}
         <div class="field nodal-stations">
-          <label>{{ field.label }}:</label>
+          <span class="field-label">{{ field.label }}:</span>
 
           {% for st in field.stations %}
             {% set chk_name      = "LN" ~ st.code %}

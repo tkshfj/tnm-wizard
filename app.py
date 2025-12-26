@@ -1,8 +1,12 @@
-from pathlib import Path
+from __future__ import annotations
+
 import json
-import yaml
 import re
-from typing import Mapping, List, Dict, Any
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Protocol, Tuple, runtime_checkable
+
+import yaml
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,309 +17,414 @@ CONFIG_DIR = BASE_DIR / "config"
 
 app = FastAPI(title="TNM Wizard")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
+# ------------------------------
+# Config
+# ------------------------------
+@dataclass(frozen=True)
 class OrganConfig:
-    def __init__(self, cfg: dict):
-        self.organ = cfg["organ"]
-        self.display_name = cfg.get("display_name", self.organ)
-        self.version = cfg.get("version", "")
-        self.sections = cfg["sections"]
-        self.template_name = cfg["template"]
-        # TNM stage table: can be dict or JSON file
-        self.stage_table = {}
+    organ: str
+    display_name: str
+    version: str
+    sections: List[Dict[str, Any]]
+    template: str
+    stage_table: Dict[str, str]
+
+    @staticmethod
+    def from_dict(cfg: Dict[str, Any]) -> "OrganConfig":
+        organ = cfg["organ"]
+        display_name = cfg.get("display_name", organ)
+        version = cfg.get("version", "")
+        try:
+            sections = cfg["sections"]
+            template = cfg["template"]
+        except KeyError as e:
+            raise ValueError(f"Missing required key in config: {e}") from e
+
+        stage_table: Dict[str, str] = {}
         tnm = cfg.get("tnm_stage_table")
+
         if isinstance(tnm, dict):
-            self.stage_table = tnm
+            stage_table = tnm
         elif isinstance(tnm, str):
-            # if we later want JSON/YAML files, handle here
             path = CONFIG_DIR / tnm
             if path.suffix == ".json":
-                self.stage_table = json.loads(path.read_text(encoding="utf-8"))
+                stage_table = json.loads(path.read_text(encoding="utf-8"))
             elif path.suffix in (".yaml", ".yml"):
-                self.stage_table = yaml.safe_load(path.read_text(encoding="utf-8"))
+                stage_table = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+        return OrganConfig(
+            organ=organ,
+            display_name=display_name,
+            version=version,
+            sections=sections,
+            template=template,
+            stage_table=stage_table,
+        )
 
 
-def load_all_configs():
-    configs = {}
+def load_all_configs() -> Dict[str, OrganConfig]:
+    configs: Dict[str, OrganConfig] = {}
     for path in CONFIG_DIR.glob("*.yaml"):
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        oc = OrganConfig(data)
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        oc = OrganConfig.from_dict(data)
         configs[oc.organ] = oc
     return configs
 
 
-FORM_CONFIGS = load_all_configs()
+FORM_CONFIGS: Dict[str, OrganConfig] = load_all_configs()
 
 
-def derive_stage(organ_cfg: OrganConfig, pT: str, pN: str, pM: str) -> str:
-    """TNM -> stage lookup with simple wildcard support.
-    - Exact match has priority (e.g. 'T1a,N0,M0')
-    - If no exact match, try patterns with '*' such as 'T*,N*,M1*'
-    """
-    t = pT.replace("p", "")
-    n = pN.replace("p", "")
-    m = pM.replace("p", "")
-    key = f"{t},{n},{m}"
-    table = organ_cfg.stage_table
-    # 1. Exact match
-    if key in table:
-        return table[key]
-    # 2. Wildcard patterns: treat '*' as '.*' in a regex
-    for pattern, stage in table.items():
-        if "*" not in pattern:
-            continue
-        # Escape regex special chars except '*', then replace '*' with '.*'
-        # Split not strictly necessary here; simple global replace is enough:
-        regex_pattern = "^" + re.escape(pattern).replace("\\*", ".*") + "$"
-        if re.match(regex_pattern, key):
-            return stage
-    # 3. Fallback
-    return "Stage ?"
+# ------------------------------
+# Small helpers (keep functions simple for Sonar)
+# ------------------------------
+def iter_config_fields(cfg: OrganConfig) -> Iterable[Dict[str, Any]]:
+    for section in cfg.sections:
+        for field in section.get("fields", []):
+            yield field
 
 
-def extract_fields(form, organ_cfg: OrganConfig) -> dict:
-    data = {}
-    for section in organ_cfg.sections:
-        for field in section["fields"]:
-            name = field["name"]
-            ftype = field.get("type")
-            has_options = bool(field.get("options"))
-            if ftype == "checkbox":
-                if has_options:
-                    # multi-select
-                    value = form.getlist(name)
-                else:
-                    value = form.get(name) == "true"
-            else:
-                value = form.get(name)
-            if ftype == "number" and value not in (None, "", []):
-                try:
-                    value = float(value)
-                except ValueError:
-                    value = None
-            data[name] = value
-    return data
+def has_field_type(cfg: OrganConfig, field_type: str) -> bool:
+    return any(
+        field.get("type") == field_type
+        for section in cfg.sections
+        for field in section.get("fields", [])
+    )
 
 
-def _getlist(form_like: Mapping[str, Any], name: str) -> List[str]:
-    """
-    Helper that returns a list of values for a field:
-    - If the object has .getlist (Starlette FormData / MultiDict), use it.
-    - Otherwise, accept list, comma-separated string, or single value.
-    """
-    if hasattr(form_like, "getlist"):
-        return [v for v in form_like.getlist(name) if v not in (None, "")]
+def to_bool(value: Any) -> bool:
+    return str(value or "").strip().lower() in {"true", "on", "1", "yes"}
+
+
+def to_float_or_none(value: Any) -> Optional[float]:
+    if value in (None, "", []):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+@runtime_checkable
+class SupportsGetList(Protocol):
+
+    def getlist(self, key: str) -> List[Any]:
+        ...
+
+
+def getlist(form_like: Mapping[str, Any] | SupportsGetList, name: str) -> List[str]:
+    if isinstance(form_like, SupportsGetList):
+        return [str(v) for v in form_like.getlist(name) if v not in (None, "")]
+
     value = form_like.get(name)
     if value is None:
         return []
     if isinstance(value, list):
-        return [v for v in value if v not in (None, "")]
-    # e.g. "AD_mucinous,AD_micropap"
+        return [str(v) for v in value if v not in (None, "")]
     if isinstance(value, str) and "," in value:
         return [v.strip() for v in value.split(",") if v.strip()]
     return [str(value)]
 
 
-def build_histologic_summary(form_data: Mapping[str, Any], cfg: Any) -> str:
+# ------------------------------
+# TNM stage
+# ------------------------------
+def normalize_tnm_component(value: str) -> str:
+    s = (value or "").strip()
+    return s[1:] if s.startswith("p") else s
+
+
+def derive_stage(cfg: OrganConfig, pt: str, pn: str, pm: str) -> str:
     """
-    New unified version: read rows of:
-      histologic_type_i, histologic_subtype_i, histologic_percent_i (i=1..N)
-
-    Decide the primary combination as the row with the largest percentage,
-    then return a text like:
-
-      '腺癌, 乳頭腺癌 (主 50%), 腺房腺癌 30%, 非浸潤性腺癌 粘液非産生 20%'
+    TNM -> stage lookup with simple wildcard support.
+    - Exact match has priority (e.g. 'T1a,N0,M0')
+    - If no exact match, try patterns with '*' such as 'T*,N*,M1*'
     """
+    key = ",".join(
+        [
+            normalize_tnm_component(pt),
+            normalize_tnm_component(pn),
+            normalize_tnm_component(pm),
+        ]
+    )
 
-    # 1) find histologic_mix field in cfg to get type/subtype labels and row count
-    sections = getattr(cfg, "sections", None)
-    if sections is None and isinstance(cfg, dict):
-        sections = cfg.get("sections", [])
+    table = cfg.stage_table
 
-    mix_field = None
-    for section in sections or []:
-        if not isinstance(section, dict):
+    # 1) exact
+    exact = table.get(key)
+    if exact:
+        return exact
+
+    # 2) wildcard
+    for pattern, stage in table.items():
+        if "*" not in pattern:
             continue
-        for field in section.get("fields", []):
-            if isinstance(field, dict) and field.get("type") == "histologic_mix":
-                mix_field = field
-                break
-        if mix_field:
-            break
+        regex_pattern = "^" + re.escape(pattern).replace("\\*", ".*") + "$"
+        if re.match(regex_pattern, key):
+            return stage
 
-    if not mix_field:
-        # fallback to previous logic or empty string
-        return ""
+    return "Stage ?"
 
-    max_rows = mix_field.get("rows", 4)
-    types_cfg = mix_field.get("types", [])
 
-    # Build label maps
+# ------------------------------
+# Form extraction
+# ------------------------------
+def read_field_value(form: Mapping[str, Any], field: Dict[str, Any]) -> Any:
+    name = field["name"]
+    ftype = field.get("type")
+    options = field.get("options")
+
+    if ftype == "checkbox":
+        # multi-choice checkbox group
+        if options:
+            return getlist(form, name)
+        # single boolean checkbox
+        return to_bool(form.get(name))
+
+    return form.get(name)
+
+
+def extract_fields(form: Mapping[str, Any], cfg: OrganConfig) -> Dict[str, Any]:
+    data: Dict[str, Any] = {}
+
+    for field in iter_config_fields(cfg):
+        name = field["name"]
+        ftype = field.get("type")
+
+        value = read_field_value(form, field)
+
+        if ftype == "number":
+            value = to_float_or_none(value)
+
+        data[name] = value
+
+    return data
+
+
+# ------------------------------
+# Histology summary (mix table)
+# ------------------------------
+def find_histologic_mix_field(cfg: OrganConfig) -> Optional[Dict[str, Any]]:
+    for field in iter_config_fields(cfg):
+        if field.get("type") == "histologic_mix":
+            return field
+    return None
+
+
+def parse_pct(value: Any) -> float:
+    try:
+        s = str(value or "").strip()
+        return float(s) if s else 0.0
+    except ValueError:
+        return 0.0
+
+
+# ------------------------------
+# Histology summary (mix table) - refactor for Sonar complexity
+# ------------------------------
+HistRow = Dict[str, Any]
+
+
+def _build_histology_label_maps(types_cfg: List[Dict[str, Any]]) -> Tuple[Dict[str, str], Dict[str, Dict[str, str]]]:
     type_labels: Dict[str, str] = {}
     subtype_labels: Dict[str, Dict[str, str]] = {}
 
     for t in types_cfg:
         t_code = t.get("code")
-        t_label = t.get("label", t_code)
         if not t_code:
             continue
-        type_labels[t_code] = t_label
+
+        type_labels[t_code] = t.get("label", t_code)
+
         sub_map: Dict[str, str] = {}
         for st in t.get("subtypes", []):
             s_code = st.get("code")
-            s_label = st.get("label", s_code)
             if s_code:
-                sub_map[s_code] = s_label
+                sub_map[s_code] = st.get("label", s_code)
         subtype_labels[t_code] = sub_map
 
-    # 2) Collect rows from the form
-    rows: List[Dict[str, Any]] = []
+    return type_labels, subtype_labels
+
+
+def _collect_histology_rows(form_data: Mapping[str, Any], max_rows: int) -> List[HistRow]:
+    rows: List[HistRow] = []
+
     for i in range(1, max_rows + 1):
         t_code = (form_data.get(f"histologic_type_{i}") or "").strip()
         s_code = (form_data.get(f"histologic_subtype_{i}") or "").strip()
-        pct_str = (form_data.get(f"histologic_percent_{i}") or "").strip()
 
+        pct_raw = form_data.get(f"histologic_percent_{i}")
+        pct_str = str(pct_raw or "").strip()
+
+        # skip fully empty rows
         if not (t_code or s_code or pct_str):
-            # fully empty row, skip
             continue
-
-        try:
-            pct = float(pct_str) if pct_str else 0.0
-        except ValueError:
-            pct = 0.0
 
         rows.append(
             {
                 "type_code": t_code,
                 "subtype_code": s_code,
-                "pct": pct,
+                "pct": parse_pct(pct_raw),
             }
         )
 
+    return rows
+
+
+def _pick_primary_row(rows: List[HistRow]) -> HistRow:
+    def score(r: HistRow) -> tuple[float, int]:
+        pct = float(r.get("pct") or 0.0)
+        has_subtype = 1 if (r.get("subtype_code") or "").strip() else 0
+        return (pct, has_subtype)
+    return max(rows, key=score)
+
+
+def _label_for_type(type_labels: Dict[str, str], type_code: str) -> str:
+    return type_labels.get(type_code, type_code or "")
+
+
+def _label_for_subtype(subtype_labels: Dict[str, Dict[str, str]], type_code: str, subtype_code: str) -> str:
+    return subtype_labels.get(type_code, {}).get(subtype_code, subtype_code or "")
+
+
+def _format_primary_parts(pt_label: str, ps_label: str, ppct: float) -> List[str]:
+    """
+    Same rule as your current code:
+    - If subtype label starts with type label, avoid duplication.
+    - Show '(主 xx%)' only if pct > 0.
+    """
+    parts: List[str] = []
+
+    if pt_label and ps_label and ps_label.startswith(pt_label):
+        parts.append(ps_label if ppct <= 0 else f"{ps_label} (主 {ppct:.0f}%)")
+        return parts
+
+    if pt_label:
+        parts.append(pt_label)
+
+    if ps_label:
+        parts.append(ps_label if ppct <= 0 else f"{ps_label} (主 {ppct:.0f}%)")
+    elif ppct > 0:
+        parts.append(f"(主 {ppct:.0f}%)")
+
+    return parts
+
+
+def _format_non_primary_part(
+    r: HistRow,
+    pt_code: str,
+    type_labels: Dict[str, str],
+    subtype_labels: Dict[str, Dict[str, str]],
+) -> str:
+    """
+    Returns '' if row should not contribute (pct <= 0).
+    Otherwise returns one formatted fragment, same logic as your current code.
+    """
+    pct = float(r.get("pct") or 0.0)
+    if pct <= 0:
+        return ""
+
+    t_code = r.get("type_code", "")
+    s_code = r.get("subtype_code", "")
+
+    t_label = _label_for_type(type_labels, t_code)
+    s_label = _label_for_subtype(subtype_labels, t_code, s_code)
+
+    pct_txt = f"{pct:.0f}%"
+
+    if t_code == pt_code:
+        return f"{s_label} {pct_txt}" if s_label else pct_txt
+
+    if t_label and s_label:
+        return f"{t_label} {s_label} {pct_txt}"
+    if t_label:
+        return f"{t_label} {pct_txt}"
+    if s_label:
+        return f"{s_label} {pct_txt}"
+
+    return ""
+
+
+def build_histologic_summary(form_data: Mapping[str, Any], cfg: OrganConfig) -> str:
+    mix_field = find_histologic_mix_field(cfg)
+    if not mix_field:
+        return ""
+
+    max_rows = int(mix_field.get("rows", 4))
+    types_cfg = mix_field.get("types", [])
+
+    type_labels, subtype_labels = _build_histology_label_maps(types_cfg)
+    rows = _collect_histology_rows(form_data, max_rows)
     if not rows:
         return ""
 
-    # 3) find primary row: the one with the largest pct
-    primary_row = max(rows, key=lambda r: r["pct"])
-    primary_type_code = primary_row["type_code"]
-    primary_sub_code = primary_row["subtype_code"]
-    primary_pct = primary_row["pct"]
+    primary = _pick_primary_row(rows)
+    pt_code = primary.get("type_code", "")
+    ps_code = primary.get("subtype_code", "")
+    ppct = float(primary.get("pct") or 0.0)
 
-    primary_type_label = type_labels.get(primary_type_code, primary_type_code or "")
-    primary_sub_label = subtype_labels.get(primary_type_code, {}).get(
-        primary_sub_code, primary_sub_code or ""
-    )
+    pt_label = _label_for_type(type_labels, pt_code)
+    ps_label = _label_for_subtype(subtype_labels, pt_code, ps_code)
 
-    # 4) build sentence
-    parts: List[str] = []
+    parts = _format_primary_parts(pt_label, ps_label, ppct)
 
-    # Top-level type label if available
-    if primary_type_label:
-        parts.append(primary_type_label)
-
-    # Primary subtype with "(主 xx%)"
-    if primary_sub_label:
-        parts.append(f"{primary_sub_label} (主 {primary_pct:.0f}%)")
-    elif primary_pct > 0:
-        parts.append(f"(主 {primary_pct:.0f}%)")
-
-    # Non-primary rows
     for r in rows:
-        if r is primary_row:
+        if r is primary:
             continue
-
-        t_code = r["type_code"]
-        s_code = r["subtype_code"]
-        pct = r["pct"]
-
-        t_label = type_labels.get(t_code, t_code or "")
-        s_label = subtype_labels.get(t_code, {}).get(s_code, s_code or "")
-
-        if not pct:
-            continue
-
-        # same type as primary: no need to repeat type label
-        if t_code == primary_type_code and t_label:
-            if s_label:
-                parts.append(f"{s_label} {pct:.0f}%")
-            else:
-                parts.append(f"{pct:.0f}%")
-        else:
-            # different histologic type: show both type and subtype
-            if t_label and s_label:
-                parts.append(f"{t_label} {s_label} {pct:.0f}%")
-            elif t_label:
-                parts.append(f"{t_label} {pct:.0f}%")
-            elif s_label:
-                parts.append(f"{s_label} {pct:.0f}%")
+        frag = _format_non_primary_part(r, pt_code, type_labels, subtype_labels)
+        if frag:
+            parts.append(frag)
 
     return ", ".join(parts)
 
 
-def build_nodal_summary(form_data: Mapping[str, str]) -> str:
-    """
-    Parse LNxx_positive / LNxx_total pairs from the form data and build a
-    compact summary like: '1R (1/3), 3p (2/4)'.
+# ------------------------------
+# Nodal summary
+# ------------------------------
+def _first_nonempty(form_like: Mapping[str, Any] | SupportsGetList, key: str) -> str:
+    if isinstance(form_like, SupportsGetList):
+        for v in form_like.getlist(key):
+            s = str(v or "").strip()
+            if s:
+                return s
+        return ""
+    return str(form_like.get(key) or "").strip()
 
-    Expected field names:
-      - LN1R_positive, LN1R_total
-      - LN1L_positive, LN1L_total
-      - LN2R_positive, LN2R_total
-      - ...
-    and so on, for all stations defined in lung.yaml.
-    """
-    summary_parts = []
 
-    POS_SUFFIX = "_positive"
-    TOTAL_SUFFIX = "_total"
+def build_nodal_summary(form_data: Mapping[str, Any] | SupportsGetList) -> str:
+    pos_suffix = "_positive"
+    total_suffix = "_total"
+    parts: List[str] = []
 
-    for key, pos_val in form_data.items():
-        # Only keys ending with "_positive" are of interest
-        if not key.endswith(POS_SUFFIX):
+    # FormData iteration can include duplicates; use set for stability
+    keys = sorted(set(form_data))
+    for key in keys:
+        if not key.endswith(pos_suffix):
             continue
 
-        pos_val = (pos_val or "").strip()
-        if pos_val == "":
-            # nothing entered, skip
+        pos_val = _first_nonempty(form_data, key)
+        if not pos_val:
             continue
 
-        base = key[:-len(POS_SUFFIX)]  # e.g. "LN1R" from "LN1R_positive"
-        total_key = f"{base}{TOTAL_SUFFIX}"
-        total_val = (form_data.get(total_key) or "").strip()
+        base = key[: -len(pos_suffix)]
+        total_key = f"{base}{total_suffix}"
+        total_val = _first_nonempty(form_data, total_key)
 
-        # Optional: only include stations that were *checked* (LNxx = "true")
-        checkbox_val = (form_data.get(base) or "").strip()
-        if checkbox_val.lower() not in {"true", "on", "1"}:
-            # If we *only* want stations where the checkbox was checked, uncomment:
-            # continue
-            # For now we allow it if positive is filled, even if checkbox missing
-            pass
-
-        # Human label: strip "LN" prefix if present → "1R", "3p" etc.
         label = base[2:] if base.startswith("LN") else base
+        parts.append(f"{label} ({pos_val}/{total_val})" if total_val else f"{label} ({pos_val}/?)")
 
-        if total_val:
-            summary_parts.append(f"{label} ({pos_val}/{total_val})")
-        else:
-            # If total is missing, still show positives
-            summary_parts.append(f"{label}({pos_val}/?)")
-
-    return ", ".join(summary_parts)
+    return ", ".join(parts)
 
 
+# ------------------------------
+# Routes
+# ------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    organs = [
-        {"code": k, "label": cfg.display_name}
-        for k, cfg in FORM_CONFIGS.items()
-    ]
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "organs": organs},
-    )
+    organs = [{"code": k, "label": cfg.display_name} for k, cfg in FORM_CONFIGS.items()]
+    return templates.TemplateResponse("index.html", {"request": request, "organs": organs})
 
 
 @app.get("/{organ}", response_class=HTMLResponse)
@@ -323,76 +432,41 @@ async def show_form(request: Request, organ: str):
     cfg = FORM_CONFIGS.get(organ)
     if not cfg:
         return HTMLResponse("Unknown organ", status_code=404)
-
-    return templates.TemplateResponse(
-        "form_generic.html",
-        {"request": request, "config": cfg},
-    )
+    return templates.TemplateResponse("form_generic.html", {"request": request, "config": cfg})
 
 
 @app.post("/{organ}/generate", response_class=HTMLResponse)
 async def generate_report(request: Request, organ: str):
-    # Look up form configuration
     cfg = FORM_CONFIGS.get(organ)
     if cfg is None:
         return HTMLResponse("Unknown organ", status_code=404)
 
-    # Read raw form data once
     form = await request.form()
-    form_dict: Dict[str, Any] = dict(form)
+    # form_dict: Dict[str, Any] = dict(form)
 
-    # Extract structured fields according to config
     data = extract_fields(form, cfg)
+    if cfg.version:
+        data["version"] = cfg.version
 
-    # Version (supports cfg.version or cfg["version"])
-    version = getattr(cfg, "version", None)
-    if version is None and isinstance(cfg, dict):
-        version = cfg.get("version")
-    if version is not None:
-        data["version"] = version
-
-    # Detect whether this organ has nodal_stations and build summary
-    #    cfg.sections is a list of dicts; each section is like {"id": ..., "title": ..., "fields": [...]}
-    sections = getattr(cfg, "sections", None)
-    if sections is None and isinstance(cfg, dict):
-        sections = cfg.get("sections", [])
-
-    # histologic summary
     data["histologic_summary"] = build_histologic_summary(form, cfg)
 
-    has_nodal_stations = any(
-        isinstance(field, dict) and field.get("type") == "nodal_stations"
-        for section in (sections or [])
-        if isinstance(section, dict)
-        for field in section.get("fields", [])
-    )
-
-    if has_nodal_stations:
-        data["nodal_summary"] = build_nodal_summary(form_dict)
+    if has_field_type(cfg, "nodal_stations"):
+        data["nodal_summary"] = build_nodal_summary(form)  # form_dict
     else:
         data["nodal_summary"] = ""
 
-    # Derive TNM stage if all components are present
-    pT = data.get("pT")
-    pN = data.get("pN")
-    pM = data.get("pM")
-    if pT and pN and pM:
-        data["stage"] = derive_stage(cfg, pT, pN, pM)
+    # TNM stage (expects extracted keys pT/pN/pM)
+    pt = data.get("pT")
+    pn = data.get("pN")
+    pm = data.get("pM")
+    if pt and pn and pm:
+        data["stage"] = derive_stage(cfg, pt, pn, pm)
 
-    # Render diagnostic text
-    template = templates.get_template(
-        getattr(cfg, "template_name", None)
-        if not isinstance(cfg, dict)
-        else cfg.get("template_name")
-    )
-    report_text = template.render(data=data)
+    # FIX: use cfg.template (your YAML key is "template")
+    report_template = templates.get_template(cfg.template)
+    report_text = report_template.render(data=data)
 
-    # Render result page
     return templates.TemplateResponse(
         "result.html",
-        {
-            "request": request,
-            "report_text": report_text,
-            "organ": organ,
-        },
+        {"request": request, "report_text": report_text, "organ": organ},
     )

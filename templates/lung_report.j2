@@ -8,7 +8,6 @@
 組織型: {{ data.histologic_type }}
 組織型亜分類: {{ data.histologic_subtype }}
 組織型・亜型: {{ data.histologic_summary }}
-組織学的記載: {{ data.histologic_description }}
 Grade: {{ data.grade }}
 STAS: {{ data.stas }}
 切除マージンまでの距離(mm): {{ "%.0f"|format(data.margin_distance or 0) }}
@@ -17,6 +16,12 @@ STAS: {{ data.stas }}
 リンパ管侵襲: {{ data.ly }}
 血管侵襲: {{ data.v }}
 神経周囲侵襲: {{ data.pn }}
+胸水細胞診: {{ data.pleural_cytology }}
+胸腔内洗浄細胞診: {{ data.PLC }}
+気管支断端: {{ data.br }}
+肺動脈断端: {{ data.pa }}
+肺静脈断端: {{ data.pv }}
+
 {% if data.nodal_summary %}
 リンパ節転移: {{ data.nodal_summary }}
 {% else %}
@@ -29,3 +34,7 @@ STAS: {{ data.stas }}
 病期分類: p{{ data.pT }}{{ data.pN }}{{ data.pM }} ({{ data.stage }})
 
 {{ data.version }} 準拠
+
+組織学的記載: {{ data.histologic_description }}
+免疫染色: 
+遺伝子検査: 適、腫瘍含有率: %、マーキング: 済
