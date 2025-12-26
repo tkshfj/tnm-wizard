@@ -293,21 +293,21 @@ def _format_primary_parts(pt_label: str, ps_label: str, ppct: float) -> List[str
     """
     Same rule as your current code:
     - If subtype label starts with type label, avoid duplication.
-    - Show '(主 xx%)' only if pct > 0.
+    - Show '(xx%)' only if pct > 0.
     """
     parts: List[str] = []
 
     if pt_label and ps_label and ps_label.startswith(pt_label):
-        parts.append(ps_label if ppct <= 0 else f"{ps_label} (主 {ppct:.0f}%)")
+        parts.append(ps_label if ppct <= 0 else f"{ps_label} ({ppct:.0f}%)")
         return parts
 
     if pt_label:
         parts.append(pt_label)
 
     if ps_label:
-        parts.append(ps_label if ppct <= 0 else f"{ps_label} (主 {ppct:.0f}%)")
+        parts.append(ps_label if ppct <= 0 else f"{ps_label} ({ppct:.0f}%)")
     elif ppct > 0:
-        parts.append(f"(主 {ppct:.0f}%)")
+        parts.append(f"({ppct:.0f}%)")
 
     return parts
 
@@ -318,33 +318,31 @@ def _format_non_primary_part(
     type_labels: Dict[str, str],
     subtype_labels: Dict[str, Dict[str, str]],
 ) -> str:
-    """
-    Returns '' if row should not contribute (pct <= 0).
-    Otherwise returns one formatted fragment, same logic as your current code.
-    """
     pct = float(r.get("pct") or 0.0)
     if pct <= 0:
         return ""
 
-    t_code = r.get("type_code", "")
-    s_code = r.get("subtype_code", "")
+    t_code = (r.get("type_code") or "").strip()
+    s_code = (r.get("subtype_code") or "").strip()
 
     t_label = _label_for_type(type_labels, t_code)
     s_label = _label_for_subtype(subtype_labels, t_code, s_code)
 
-    pct_txt = f"{pct:.0f}%"
+    pct_txt = f"({pct:.0f}%)"
 
-    if t_code == pt_code:
-        return f"{s_label} {pct_txt}" if s_label else pct_txt
+    # if same primary type, prefer subtype label; otherwise fall back to type label
+    if t_code == (pt_code or "").strip():
+        label = s_label or t_label
+        return f"{label} {pct_txt}".strip() if label else pct_txt
 
+    # different type group
     if t_label and s_label:
-        return f"{t_label} {s_label} {pct_txt}"
+        return f"{t_label}: {s_label} {pct_txt}"
     if t_label:
         return f"{t_label} {pct_txt}"
     if s_label:
         return f"{s_label} {pct_txt}"
-
-    return ""
+    return pct_txt
 
 
 def build_histologic_summary(form_data: Mapping[str, Any], cfg: OrganConfig) -> str:
@@ -442,7 +440,6 @@ async def generate_report(request: Request, organ: str):
         return HTMLResponse("Unknown organ", status_code=404)
 
     form = await request.form()
-    # form_dict: Dict[str, Any] = dict(form)
 
     data = extract_fields(form, cfg)
     if cfg.version:
@@ -451,7 +448,7 @@ async def generate_report(request: Request, organ: str):
     data["histologic_summary"] = build_histologic_summary(form, cfg)
 
     if has_field_type(cfg, "nodal_stations"):
-        data["nodal_summary"] = build_nodal_summary(form)  # form_dict
+        data["nodal_summary"] = build_nodal_summary(form)
     else:
         data["nodal_summary"] = ""
 

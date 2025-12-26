@@ -42,11 +42,11 @@ sections:
           - code: "AD"
             label: "Invasive non-mucinous adenocarcinoma"
             subtypes:
-              - { code: "AD_lepidic", label: "Lepidic adenocarcinoma" }
-              - { code: "AD_acinar", label: "Acinar adenocarcinoma" }
-              - { code: "AD_pap", label: "Papillary adenocarcinoma" }
-              - { code: "AD_micropap", label: "Micropapillary adenocarcinoma" }
-              - { code: "AD_solid", label: "Solid adenocarcinoma" }
+              - { code: "AD_lepidic", label: "lepidic" }
+              - { code: "AD_acinar", label: "acinar" }
+              - { code: "AD_pap", label: "papillary" }
+              - { code: "AD_micropap", label: "micropapillary" }
+              - { code: "AD_solid", label: "solid" }
           - code: "IMA"
             label: "Invasive mucinous adenocarcinoma"
             subtypes:
@@ -235,20 +235,20 @@ sections:
         label: "胸水細胞診"
         type: radio
         options:
-          - { code: "neg",         label: "E(-)",   help: "Negative cytology" }
-          - { code: "equivocal",   label: "E(±)",   help: "Equivocal / atypical cells" }
-          - { code: "pos",         label: "E(+)",   help: "Positive for malignancy" }
-          - { code: "inadequate",  label: "E(inadequate)", help: "Inadequate / unsatisfactory specimen" }
-          - { code: "not_examined", label: "E(not perfomed)", default: true, help: "Cytology not performed" }
+          - { code: "E(-)",         label: "E(-)",   help: "Negative cytology" }
+          - { code: "E(±)",   label: "E(±)",   help: "Equivocal / atypical cells" }
+          - { code: "E(+)",         label: "E(+)",   help: "Positive for malignancy" }
+          - { code: "E(inadequate)",  label: "E(inadequate)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "E(not perfomed)", label: "E(not perfomed)", default: true, help: "Cytology not performed" }
       - name: PLC
         label: "胸腔内洗浄細胞診"
         type: radio
         options:
-          - { code: "neg",         label: "PLC(-)",   help: "Negative cytology" }
-          - { code: "equivocal",   label: "PLC(±)",   help: "Equivocal / atypical cells" }
-          - { code: "pos",         label: "PLC(+)",   help: "Positive for malignancy" }
-          - { code: "inadequate",  label: "PLC(inadequate)", help: "Inadequate / unsatisfactory specimen" }
-          - { code: "not_examined", label: "PLC(not perfomed)", default: true, help: "Cytology not performed" }
+          - { code: "PLC(-)",         label: "PLC(-)",   help: "Negative cytology" }
+          - { code: "PLC(±)",   label: "PLC(±)",   help: "Equivocal / atypical cells" }
+          - { code: "PLC(+)",         label: "PLC(+)",   help: "Positive for malignancy" }
+          - { code: "PLC(inadequate)",  label: "PLC(inadequate)", help: "Inadequate / unsatisfactory specimen" }
+          - { code: "PLC(not perfomed)", label: "PLC(not perfomed)", default: true, help: "Cytology not performed" }
       - name: R
         label: "残存病変"
         type: radio
@@ -263,50 +263,50 @@ sections:
         label: "胸膜播種"
         type: radio
         options:
-          - { code: "neg", label: "d(-)", default: true, help: "" }
-          - { code: "pos", label: "d(+)", help: "" }
+          - { code: "d(-)", label: "d(-)", default: true, help: "" }
+          - { code: "d(+)", label: "d(+)", help: "" }
       - name: br
         label: "気管支断端"
         type: radio
         options:
-          - { code: "neg", label: "br(-)", default: true, help: "" }
-          - { code: "pos", label: "br(+)", help: "" }
+          - { code: "br(-)", label: "br(-)", default: true, help: "" }
+          - { code: "br(+)", label: "br(+)", help: "" }
       - name: pa
         label: "肺動脈断端"
         type: radio
         options:
-          - { code: "neg", label: "pa(-)", default: true, help: "" }
-          - { code: "pos", label: "pa(+)", help: "" }
+          - { code: "pa(-)", label: "pa(-)", default: true, help: "" }
+          - { code: "pa(+)", label: "pa(+)", help: "" }
       - name: pv
         label: "肺静脈断端"
         type: radio
         options:
-          - { code: "neg", label: "pv(-)", default: true, help: "" }
-          - { code: "pos", label: "pv(+)", help: "" }
+          - { code: "pv(-)", label: "pv(-)", default: true, help: "" }
+          - { code: "pv(+)", label: "pv(+)", help: "" }
       - name: cw
         label: "胸壁断端"
         type: radio
         options:
-          - { code: "neg", label: "cw(-)", default: true, help: "" }
-          - { code: "pos", label: "cw(+)", help: "" }
+          - { code: "cw(-)", label: "cw(-)", default: true, help: "" }
+          - { code: "cw(+)", label: "cw(+)", help: "" }
       - name: pp
         label: "壁側胸膜断端"
         type: radio
         options:
-          - { code: "neg", label: "pp(-)", default: true, help: "" }
-          - { code: "pos", label: "pp(+)", help: "" }
+          - { code: "pp(-)", label: "pp(-)", default: true, help: "" }
+          - { code: "pp(+)", label: "pp(+)", help: "" }
       - name: medp
         label: "縦隔胸膜断端"
         type: radio
         options:
-          - { code: "neg", label: "medp(-)", default: true, help: "" }
-          - { code: "pos", label: "medp(+)", help: "" }
+          - { code: "medp(-)", label: "medp(-)", default: true, help: "" }
+          - { code: "medp(+)", label: "medp(+)", help: "" }
       - name: medft
         label: "縦隔脂肪織断端"
         type: radio
         options:
-          - { code: "neg", label: "medft(-)", default: true, help: "" }
-          - { code: "pos", label: "medft(+)", help: "" }
+          - { code: "medft(-)", label: "medft(-)", default: true, help: "" }
+          - { code: "medft(+)", label: "medft(+)", help: "" }
       - name: metastatic_sites
         label: "転移臓器"
         type: checkbox

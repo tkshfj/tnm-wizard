@@ -357,53 +357,72 @@ function collectMixRowData(mixRows: MixRowEls[]): MixRowData[] {
   return out;
 }
 
+function pctParen(pct: number): string {
+  return `(${pct.toFixed(0)}%)`;
+}
+
 function findPrimaryAD(adRows: MixRowData[]): MixRowData {
   return adRows.reduce((best, cur) => (cur.pct > best.pct ? cur : best), adRows[0]);
 }
 
-function formatADMixture(adRows: MixRowData[]): string[] {
-  if (!adRows.length) return [];
+function formatADMixtureAsSentence(adRows: MixRowData[]): string {
+  // Desired:
+  // "Invasive non-mucinous adenocarcinoma: papillary (70%), acinar (30%)"
+  if (adRows.length === 0) return "";
 
   const primary = findPrimaryAD(adRows);
-  const parts: string[] = [];
+  const typeLabel = primary.typeLabel?.trim() ?? "";
+  if (!typeLabel) return ""; // no type -> don't try to emit ":" sentence
 
-  if (primary.typeLabel) parts.push(primary.typeLabel);
+  // collect subtype(pct) parts in display order:
+  // primary first, then rest (pct>0)
+  const subtypeLabel = primary.subtypeLabel?.trim() ?? "";
 
-  if (primary.subtypeLabel) {
-    parts.push(`${primary.subtypeLabel} (主 ${primary.pct.toFixed(0)}%)`);
+  let primaryPart = "";
+  if (subtypeLabel) {
+    primaryPart = `${subtypeLabel} ${pctParen(primary.pct)}`;
   } else if (primary.pct > 0) {
-    parts.push(`(主 ${primary.pct.toFixed(0)}%)`);
+    primaryPart = pctParen(primary.pct);
   }
 
-  for (const r of adRows) {
-    if (r === primary) continue;
-    if (!r.pct) continue;
+  const restParts = adRows
+    .filter((r) => r !== primary && r.pct > 0)
+    .map((r) => {
+      const st = r.subtypeLabel?.trim() ?? "";
+      return st ? `${st} ${pctParen(r.pct)}` : pctParen(r.pct);
+    });
 
-    const pctText = `${r.pct.toFixed(0)}%`;
-    parts.push(r.subtypeLabel ? `${r.subtypeLabel} ${pctText}` : pctText);
-  }
+  const subtypeParts = [primaryPart, ...restParts].filter(Boolean);
+  if (subtypeParts.length === 0) return typeLabel;
 
-  return parts;
+  return `${typeLabel}: ${subtypeParts.join(", ")}`;
 }
 
 function formatNonADRows(nonAdRows: MixRowData[]): string[] {
   const parts: string[] = [];
   for (const r of nonAdRows) {
-    if (r.typeLabel && r.subtypeLabel) parts.push(`${r.typeLabel} ${r.subtypeLabel}`);
-    else if (r.typeLabel) parts.push(r.typeLabel);
-    else if (r.subtypeLabel) parts.push(r.subtypeLabel);
+    const t = r.typeLabel?.trim() ?? "";
+    const st = r.subtypeLabel?.trim() ?? "";
+    if (t && st) parts.push(`${t} ${st}`);
+    else if (t) parts.push(t);
+    else if (st) parts.push(st);
   }
   return parts;
 }
 
 function buildHistologicSummaryFromDOM(mixRows: MixRowEls[]): string {
   const rowData = collectMixRowData(mixRows);
-  if (!rowData.length) return "";
+  if (rowData.length === 0) return "";
 
-  const adRows = rowData.filter((x) => x.typeCode === AD_CODE && x.pct > 0);
-  const nonAdRows = rowData.filter((x) => x.typeCode && x.typeCode !== AD_CODE);
+  const adRows = rowData.filter((r) => r.typeCode === AD_CODE && r.pct > 0);
+  const nonAdRows = rowData.filter((r) => r.typeCode && r.typeCode !== AD_CODE);
 
-  return [...formatADMixture(adRows), ...formatNonADRows(nonAdRows)].join(", ");
+  const adSentence = formatADMixtureAsSentence(adRows);
+  const nonAdParts = formatNonADRows(nonAdRows);
+
+  // join: AD sentence first (already contains ":" and internal ","),
+  // then append any non-AD parts as separate comma-separated items
+  return [adSentence, ...nonAdParts].filter(Boolean).join(", ");
 }
 
 // ------------------------------
