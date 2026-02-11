@@ -1,3 +1,62 @@
 # TNM Wizard
 
-We propose the design of a small intranet web application, “TNM Wizard,” which can be accessed from Windows clients via a web browser. The application converts structured input choices into standardized synoptic cancer pathology diagnostic paragraphs, in line with the Japanese General Rules for Clinical and Pathological Study of Cancer.
+A small intranet web application that converts structured input choices into standardized synoptic cancer pathology diagnostic paragraphs, in line with the Japanese General Rules for Clinical and Pathological Study of Cancer. Accessed from any client via a web browser.
+
+## Tech Stack
+
+- **Backend:** Python (FastAPI, Jinja2, PyYAML)
+- **Frontend:** Tailwind CSS 3 + DaisyUI 4, TypeScript
+- **Server:** Uvicorn
+
+## Project Structure
+
+```
+app.py                  # FastAPI application
+config/                 # YAML organ configs (e.g. lung.yaml)
+templates/
+  index.html            # Organ selection page
+  form_generic.html     # Data entry form (Jinja2 macros)
+  result.html           # Generated report display
+  lung_report.j2        # Lung-specific report template
+static-src/
+  app.css               # Tailwind directives + custom rules
+  visibility.ts         # Form field visibility / histologic mix logic
+  copy.ts               # Clipboard copy handler
+  dom.ts                # DOM query helpers
+static/                 # Built assets (output.css, *.js)
+tests/                  # Pytest unit tests
+```
+
+## Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+npm install
+```
+
+## Build
+
+```bash
+npm run build          # builds CSS (Tailwind) and JS (TypeScript)
+npm run css:build      # Tailwind only
+npm run ts:build       # TypeScript only
+```
+
+## Run
+
+```bash
+uvicorn app:app --reload
+# Open http://localhost:8000
+```
+
+## Test
+
+```bash
+python -m pytest tests/ -v
+```
+
+## License
+
+MIT
