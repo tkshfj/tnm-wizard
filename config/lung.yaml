@@ -36,16 +36,18 @@ sections:
       - name: histologic_mix
         label: "組織型"
         type: histologic_mix
-        rows: 5   # max number of rows (e.g. 3–5)
+        rows: 6   # max number of rows
 
         types:
           - code: "AD"
             label: "Invasive non-mucinous adenocarcinoma"
             subtypes:
               - { code: "AD_lepidic", label: "lepidic" }
-              - { code: "AD_acinar", label: "acinar" }
+              - { code: "AD_acinar", label: "conventional acinar" }
               - { code: "AD_pap", label: "papillary" }
               - { code: "AD_micropap", label: "micropapillary" }
+              - { code: "AD_complex", label: "complex glandular pattern" }
+              - { code: "AD_cribriform", label: "cribriform pattern" }
               - { code: "AD_solid", label: "solid" }
           - code: "IMA"
             label: "Invasive mucinous adenocarcinoma"
