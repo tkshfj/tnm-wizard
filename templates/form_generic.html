@@ -1,37 +1,43 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="medical">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ config.display_name }} TNM Wizard</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/output.css">
   <script type="module" src="/static/visibility.js"></script>
 </head>
-<body>
-  <h1>{{ config.display_name }} TNM Wizard</h1>
+<body class="bg-base-200 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto">
+  <h1 class="text-2xl font-bold mb-4">{{ config.display_name }} TNM Wizard</h1>
 
   {# --- macro for generic fields (no histology-specific branching here) --- #}
   {% macro render_input(field) %}
     {% if field.type == "radio" %}
+      <div class="flex flex-wrap gap-x-4 gap-y-1">
       {% set default_value = field.default or "" %}
       {% for opt in field.options %}
         <label
           {% if opt.help %} title="{{ opt.help }}"{% endif %}
-          class="radio-option"
+          class="label cursor-pointer gap-2"
         >
           <input
             type="radio"
             name="{{ field.name }}"
             value="{{ opt.code }}"
+            class="radio radio-primary radio-sm"
             {% if opt.code == default_value or opt.default %}checked{% endif %}
             required
           >
-          {{ opt.label }}
+          <span class="label-text">{{ opt.label }}</span>
         </label>
       {% endfor %}
+      </div>
 
     {% elif field.type == "select" %}
       <select
         name="{{ field.name }}"
+        class="select select-bordered select-sm"
         {% if field.depends_on_histologic_type %}
           data-histologic-subtype="true"
         {% endif %}
@@ -50,24 +56,26 @@
 
     {% elif field.type == "checkbox" %}
       {% if field.options %}
-        {# generic multi-choice checkboxes #}
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
         {% for opt in field.options %}
-          <label class="checkbox-option"
+          <label class="label cursor-pointer gap-2"
                  {% if opt.help %}title="{{ opt.help }}"{% endif %}
           >
             <input
               type="checkbox"
               name="{{ field.name }}"
               value="{{ opt.code }}"
+              class="checkbox checkbox-primary checkbox-sm"
             >
-            {{ opt.label }}
+            <span class="label-text">{{ opt.label }}</span>
           </label>
         {% endfor %}
+        </div>
       {% else %}
-        {# single boolean checkbox #}
-        <label class="checkbox-option">
-          <input type="checkbox" name="{{ field.name }}" value="true">
-          {{ field.label }}
+        <label class="label cursor-pointer gap-2 justify-start">
+          <input type="checkbox" name="{{ field.name }}" value="true"
+                 class="checkbox checkbox-primary checkbox-sm">
+          <span class="label-text">{{ field.label }}</span>
         </label>
       {% endif %}
 
@@ -77,26 +85,26 @@
         min="0"
         step="{{ field.step or 1 }}"
         name="{{ field.name }}"
-        {% if field.input_width %}style="width: {{ field.input_width }};"{% endif %}
+        class="input input-bordered input-sm w-20"
       >
 
     {% elif field.type == "free_text" %}
       <input
         type="text"
         name="{{ field.name }}"
-        {% if field.input_width %}style="width: {{ field.input_width }};"{% endif %}
+        class="input input-bordered input-sm w-64"
       >
 
     {% elif field.type == "textarea" %}
       <textarea
         name="{{ field.name }}"
-        id="{{ field.name }}"     {# so description has id="description" #}
+        id="{{ field.name }}"
         rows="{{ field.rows or 2 }}"
-        class="{{ field.css_class or '' }}"
+        class="textarea textarea-bordered w-full {{ field.css_class or '' }}"
       ></textarea>
 
     {% else %}
-      <input type="text" name="{{ field.name }}">
+      <input type="text" name="{{ field.name }}" class="input input-bordered input-sm">
     {% endif %}
   {% endmacro %}
 
@@ -106,15 +114,15 @@
 
       {# 1) unified histologic mix table (type/subtype/% rows) #}
       {% if field.type == "histologic_mix" %}
-        <div class="field histologic-mix" id="histologic-mix">
-          <span class="field-label">{{ field.label }}:</span>
+        <div class="field histologic-mix mb-2" id="histologic-mix">
+          <span class="field-label font-medium">{{ field.label }}:</span>
 
-          <table class="histologic-mix-table">
+          <table class="histologic-mix-table table table-compact w-auto mt-1">
             <thead>
               <tr>
                 <th>組織型</th>
                 <th>組織亜型</th>
-                <th class="histologic-percent-header">割合(%)</th>
+                <th class="histologic-percent-header text-right">割合(%)</th>
               </tr>
             </thead>
             <tbody>
@@ -125,7 +133,7 @@
                   <td>
                     <select
                       name="histologic_type_{{ i }}"
-                      class="histologic-type-select"
+                      class="histologic-type-select select select-bordered select-sm"
                       data-row="{{ i }}"
                     >
                       <option value="">--</option>
@@ -139,7 +147,7 @@
                   <td>
                     <select
                       name="histologic_subtype_{{ i }}"
-                      class="histologic-subtype-select"
+                      class="histologic-subtype-select select select-bordered select-sm"
                       data-row="{{ i }}"
                     >
                       <option value="">--</option>
@@ -156,18 +164,15 @@
                     </select>
                   </td>
 
-                  {# 割合(%) input – JS will:
-                     - require + sum only when type = AD
-                     - hide/disable for non-AD #}
-                  <td style="text-align: right;">
+                  {# 割合(%) input #}
+                  <td class="text-right">
                     <input
                       type="number"
                       name="histologic_percent_{{ i }}"
-                      class="histologic-percent-input"
+                      class="histologic-percent-input input input-bordered input-sm w-16 text-right"
                       min="0"
                       max="100"
                       step="1"
-                      style="width: 3rem; text-align: right;"
                     >
                   </td>
                 </tr>
@@ -175,41 +180,41 @@
             </tbody>
           </table>
 
-          <small class="histologic-hint" style="display:none;">
+          <small class="histologic-hint text-sm" style="display:none;">
             浸潤性非粘液性腺癌(AD)の場合、割合が 100% になるように入力します。主たる組織亜型は最大割合から自動判定されます。
           </small>
         </div>
 
       {# 2) nodal stations block #}
       {% elif field.type == "nodal_stations" %}
-        <div class="field nodal-stations">
-          <span class="field-label">{{ field.label }}:</span>
+        <div class="field nodal-stations flex flex-col gap-1">
+          <span class="field-label font-medium">{{ field.label }}:</span>
 
           {% for st in field.stations %}
             {% set chk_name      = "LN" ~ st.code %}
             {% set positive_name = "LN" ~ st.code ~ "_positive" %}
             {% set total_name    = "LN" ~ st.code ~ "_total" %}
 
-            <div class="nodal-row">
-              <label class="station-cell">
-                <input type="checkbox" name="{{ chk_name }}" value="true">
-                <span class="station-code">{{ st.label }}</span>
+            <div class="nodal-row flex items-center gap-2">
+              <label class="station-cell inline-flex items-center gap-1 w-14">
+                <input type="checkbox" name="{{ chk_name }}" value="true"
+                       class="checkbox checkbox-primary checkbox-sm">
+                <span class="station-code min-w-[2rem] text-right tabular-nums">{{ st.label }}</span>
               </label>
 
               <input
                 type="number"
                 name="{{ positive_name }}"
-                class="nodal-input"
+                class="nodal-input input input-bordered input-sm w-16 text-right"
                 min="0"
                 step="1"
-                style="width: 3.0rem;"
                 placeholder="positive"
                 data-visible-if-field="{{ chk_name }}"
                 data-visible-if-values="true"
               >
 
               <span
-                class="nodal-slash"
+                class="nodal-slash text-center"
                 data-visible-if-field="{{ chk_name }}"
                 data-visible-if-values="true"
               >/</span>
@@ -217,10 +222,9 @@
               <input
                 type="number"
                 name="{{ total_name }}"
-                class="nodal-input"
+                class="nodal-input input input-bordered input-sm w-16 text-right"
                 min="0"
                 step="1"
-                style="width: 3.0rem;"
                 placeholder="total"
                 data-visible-if-field="{{ chk_name }}"
                 data-visible-if-values="true"
@@ -231,7 +235,7 @@
 
       {# 3) generic fields, including description textarea with autofill button #}
       {% else %}
-        <div class="field {% if field.type == 'textarea' %}description-textarea{% endif %}"
+        <div class="field mb-2 {% if field.type == 'textarea' %}flex flex-col items-start max-w-xl{% endif %}"
              data-field-name="{{ field.name }}"
              {% if field.visible_if %}
                data-visible-if-field="{{ field.visible_if['field'] }}"
@@ -241,18 +245,18 @@
           {% if not (field.type == "checkbox" and not field.options) %}
 
             {% if field.name == "description" %}
-              <div style="display:flex; align-items:center; gap:0.5rem;">
-                <label for="{{ field.name }}">{{ field.label }}:</label>
+              <div class="flex items-center gap-2 mb-1">
+                <label for="{{ field.name }}" class="font-medium">{{ field.label }}:</label>
                 <button
                   type="button"
                   id="btn-fill-description-from-histology"
-                  style="font-size:0.8rem; padding:0.2rem 0.5rem;"
+                  class="btn btn-xs btn-outline"
                 >
                   組織型から自動入力
                 </button>
               </div>
             {% else %}
-              <label for="{{ field.name }}">{{ field.label }}:</label>
+              <label for="{{ field.name }}" class="font-medium">{{ field.label }}:</label>
             {% endif %}
 
           {% endif %}
@@ -268,25 +272,28 @@
     {% for section in config.sections %}
 
       {% if section.id == "nodal_metastasis" %}
-        <details class="section-collapsible" open>
-          <summary>{{ section.title }}</summary>
-          <fieldset>
-            <legend style="display:none">{{ section.title }}</legend>
+        <details class="border border-base-300 rounded-box mb-4 bg-base-100 shadow" open>
+          <summary class="cursor-pointer font-bold p-3">{{ section.title }}</summary>
+          <fieldset class="px-4 pb-4">
+            <legend class="sr-only">{{ section.title }}</legend>
             {{ render_section_fields(section) }}
           </fieldset>
         </details>
       {% else %}
-        <fieldset>
-          <legend>{{ section.title }}</legend>
-          {{ render_section_fields(section) }}
-        </fieldset>
+        <div class="card bg-base-100 shadow mb-4">
+          <div class="card-body p-4">
+            <h2 class="card-title text-lg">{{ section.title }}</h2>
+            {{ render_section_fields(section) }}
+          </div>
+        </div>
       {% endif %}
 
     {% endfor %}
 
-    <button type="submit">診断文を生成</button>
+    <button type="submit" class="btn btn-primary">診断文を生成</button>
   </form>
 
-  <p><a href="/">戻る</a></p>
+  <p class="mt-4"><a href="/" class="link">戻る</a></p>
+  </div>
 </body>
 </html>

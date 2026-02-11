@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide default <summary> marker across browsers */
+summary::marker { content: ""; }
+summary::-webkit-details-marker { display: none; }
+
+/* Nodal extra fields: hidden by default, JS sets inline-flex when visible */
+.nodal-extra {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}

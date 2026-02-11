@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="medical">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TNM Wizard</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/output.css">
 </head>
-<body>
-  <h1>TNM Wizard</h1>
-  <p>臓器を選択してください。</p>
-  <ul>
-    {% for organ in organs %}
-      <li><a href="/{{ organ.code }}">{{ organ.label }}</a></li>
-    {% endfor %}
-  </ul>
+<body class="bg-base-200 min-h-screen p-6">
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">TNM Wizard</h1>
+    <p class="mb-4">臓器を選択してください。</p>
+    <ul class="menu bg-base-100 rounded-box w-full shadow">
+      {% for organ in organs %}
+        <li><a href="/{{ organ.code }}">{{ organ.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
 </body>
 </html>
