@@ -59,6 +59,17 @@ When deploying behind nginx at a subpath (e.g. `/tnm-wizard/`), use the `--root-
 uvicorn app:app --root-path /tnm-wizard
 ```
 
+### Updating a deployed instance
+
+```bash
+cd /opt/tnm-wizard
+git pull
+source .venv/bin/activate
+pip install -r requirements.txt
+npm run build
+sudo systemctl restart tnm-wizard
+```
+
 ## Test
 
 ```bash
