@@ -59,6 +59,24 @@ When deploying behind nginx at a subpath (e.g. `/tnm-wizard/`), use the `--root-
 uvicorn app:app --root-path /tnm-wizard
 ```
 
+### Production deployment
+
+The app runs on a Raspberry Pi behind an nginx reverse proxy at `/tnm-wizard/`.
+
+| Component | Detail |
+|---|---|
+| App directory | `/opt/tnm-wizard` |
+| Systemd service | `tnm-wizard.service` (runs as `app` user) |
+| Internal address | `127.0.0.1:8000` |
+| nginx config | `/etc/nginx/sites-available/pathology-apps` |
+
+```bash
+# Service management
+sudo systemctl status tnm-wizard
+sudo systemctl restart tnm-wizard
+sudo journalctl -u tnm-wizard -f
+```
+
 ### Updating a deployed instance
 
 ```bash
@@ -66,6 +84,7 @@ cd /opt/tnm-wizard
 git pull
 source .venv/bin/activate
 pip install -r requirements.txt
+npm install
 npm run build
 sudo systemctl restart tnm-wizard
 ```
