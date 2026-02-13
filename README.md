@@ -51,6 +51,14 @@ uvicorn app:app --reload
 # Open http://localhost:8000
 ```
 
+### Running behind a reverse proxy
+
+When deploying behind nginx at a subpath (e.g. `/tnm-wizard/`), use the `--root-path` flag so that all generated URLs include the prefix:
+
+```bash
+uvicorn app:app --root-path /tnm-wizard
+```
+
 ## Test
 
 ```bash
