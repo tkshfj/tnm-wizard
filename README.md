@@ -77,16 +77,12 @@ sudo systemctl restart tnm-wizard
 sudo journalctl -u tnm-wizard -f
 ```
 
-### Updating a deployed instance
+### Deploying changes
+
+A git alias pushes to remote and syncs to the deployed instance in one step:
 
 ```bash
-cd /opt/tnm-wizard
-git pull
-source .venv/bin/activate
-pip install -r requirements.txt
-npm install
-npm run build
-sudo systemctl restart tnm-wizard
+git deploy    # pushes, rsyncs to /opt/tnm-wizard, restarts service
 ```
 
 ## Test
