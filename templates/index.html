@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TNM Wizard</title>
-  <link rel="stylesheet" href="/static/output.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='output.css') }}">
 </head>
 <body class="bg-base-200 min-h-screen p-6">
   <div class="max-w-xl mx-auto">
@@ -12,7 +12,7 @@
     <p class="mb-4">臓器を選択してください。</p>
     <ul class="menu bg-base-100 rounded-box w-full shadow">
       {% for organ in organs %}
-        <li><a href="/{{ organ.code }}">{{ organ.label }}</a></li>
+        <li><a href="{{ url_for('show_form', organ=organ.code) }}">{{ organ.label }}</a></li>
       {% endfor %}
     </ul>
   </div>
