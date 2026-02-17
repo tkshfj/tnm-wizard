@@ -170,6 +170,10 @@ sections:
         type: textarea
         rows: 3
         css_class: "description-textarea"
+      - name: ihc
+        label: "免疫染色"
+        type: textarea
+        rows: 2
       - name: grade
         label: "Grade"
         type: radio
