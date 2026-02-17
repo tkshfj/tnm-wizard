@@ -199,7 +199,7 @@ class TestBuildHistologicSummary:
             "histologic_percent_1": "100",
         }
         result = build_histologic_summary(form, mix_cfg)
-        assert "Squamous cell carcinoma, keratinizing type" in result
+        assert result == "Squamous cell carcinoma, keratinizing type"
 
     def test_mixed_ad_and_sq(self, mix_cfg: OrganConfig):
         form = {
@@ -213,7 +213,7 @@ class TestBuildHistologicSummary:
         result = build_histologic_summary(form, mix_cfg)
         assert "Invasive non-mucinous adenocarcinoma" in result
         assert "lepidic (70%)" in result
-        assert "Squamous cell carcinoma: Squamous cell carcinoma, keratinizing type (30%)" in result
+        assert "Squamous cell carcinoma, keratinizing type (30%)" in result
 
     def test_empty_form(self, mix_cfg: OrganConfig):
         assert build_histologic_summary({}, mix_cfg) == ""

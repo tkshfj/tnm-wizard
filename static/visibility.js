@@ -326,12 +326,10 @@ function formatNonADRows(nonAdRows) {
     for (const r of nonAdRows) {
         const t = r.typeLabel?.trim() ?? "";
         const st = r.subtypeLabel?.trim() ?? "";
-        if (t && st)
-            parts.push(`${t} ${st}`);
+        if (st)
+            parts.push(st);
         else if (t)
             parts.push(t);
-        else if (st)
-            parts.push(st);
     }
     return parts;
 }

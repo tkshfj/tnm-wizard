@@ -289,13 +289,17 @@ def _label_for_subtype(subtype_labels: Dict[str, Dict[str, str]], type_code: str
     return subtype_labels.get(type_code, {}).get(subtype_code, subtype_code or "")
 
 
-def _format_primary_parts(pt_label: str, ps_label: str, ppct: float) -> List[str]:
+def _format_primary_parts(pt_label: str, ps_label: str, ppct: float, *, is_ad: bool = True) -> List[str]:
     """
-    Same rule as your current code:
-    - If subtype label starts with type label, avoid duplication.
-    - Show '(xx%)' only if pct > 0.
+    Format the primary histologic row.
+    - AD (is_ad=True): type label + subtype with pct (current behaviour).
+    - Non-AD (is_ad=False): subtype label only; fall back to type label. No pct.
     """
     parts: List[str] = []
+
+    if not is_ad:
+        parts.append(ps_label or pt_label)
+        return parts
 
     if pt_label and ps_label and ps_label.startswith(pt_label):
         parts.append(ps_label if ppct <= 0 else f"{ps_label} ({ppct:.0f}%)")
@@ -317,6 +321,8 @@ def _format_non_primary_part(
     pt_code: str,
     type_labels: Dict[str, str],
     subtype_labels: Dict[str, Dict[str, str]],
+    *,
+    is_ad: bool = True,
 ) -> str:
     pct = float(r.get("pct") or 0.0)
     if pct <= 0:
@@ -329,6 +335,11 @@ def _format_non_primary_part(
     s_label = _label_for_subtype(subtype_labels, t_code, s_code)
 
     pct_txt = f"({pct:.0f}%)"
+
+    # Non-AD secondary row: subtype label only (with pct), no type prefix
+    if not is_ad:
+        label = s_label or t_label
+        return f"{label} {pct_txt}".strip() if label else pct_txt
 
     # if same primary type, prefer subtype label; otherwise fall back to type label
     if t_code == (pt_code or "").strip():
@@ -366,12 +377,13 @@ def build_histologic_summary(form_data: Mapping[str, Any], cfg: OrganConfig) -> 
     pt_label = _label_for_type(type_labels, pt_code)
     ps_label = _label_for_subtype(subtype_labels, pt_code, ps_code)
 
-    parts = _format_primary_parts(pt_label, ps_label, ppct)
+    is_ad = pt_code == "AD"
+    parts = _format_primary_parts(pt_label, ps_label, ppct, is_ad=is_ad)
 
     for r in rows:
         if r is primary:
             continue
-        frag = _format_non_primary_part(r, pt_code, type_labels, subtype_labels)
+        frag = _format_non_primary_part(r, pt_code, type_labels, subtype_labels, is_ad=is_ad)
         if frag:
             parts.append(frag)
 
