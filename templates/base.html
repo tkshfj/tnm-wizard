@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TNM Wizard{% endblock %}</title>
+  <script>
+    (function(){
+      var m = localStorage.getItem('tnm-wizard-theme') || 'auto';
+      var t = m === 'dark' ? 'medical-dark'
+            : m === 'light' ? 'medical'
+            : window.matchMedia('(prefers-color-scheme:dark)').matches
+              ? 'medical-dark' : 'medical';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', path='output.css') }}">
+  <script type="module" src="{{ url_for('static', path='theme.js') }}"></script>
+  {% block head_scripts %}{% endblock %}
+</head>
+<body class="bg-base-200 min-h-screen p-6">
+  <div class="{% block container_width %}max-w-xl{% endblock %} mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">{% block heading %}TNM Wizard{% endblock %}</h1>
+      <button id="theme-toggle" class="btn btn-ghost btn-sm text-lg" aria-label="Toggle theme"></button>
+    </div>
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
