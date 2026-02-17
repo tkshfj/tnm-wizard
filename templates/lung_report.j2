@@ -3,7 +3,7 @@
 占拠部位: {{ data.lobe }}
 腫瘍径 {{ "%.0f"|format(data.tumor_size or 0) }} mm
 浸潤径 {{ "%.0f"|format(data.invasion_size or 0) }} mm
-組織型・亜型: {{ data.histologic_summary }}
+組織型: {{ data.histologic_summary }}
 Grade: {{ data.grade }}
 STAS: {{ data.stas }}
 {% if data.modality in ["区域切除術", "部分切除術"] and data.rm is not none %}切除マージンまでの距離(mm): {{ "%.0f"|format(data.rm) }}{% endif %}
