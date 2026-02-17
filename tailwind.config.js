@@ -22,6 +22,21 @@ module.exports = {
           "error": "#ef4444",
         },
       },
+      {
+        "medical-dark": {
+          "primary": "#3b82f6",
+          "secondary": "#94a3b8",
+          "accent": "#38bdf8",
+          "neutral": "#e2e8f0",
+          "base-100": "#1e293b",
+          "base-200": "#0f172a",
+          "base-300": "#334155",
+          "info": "#38bdf8",
+          "success": "#4ade80",
+          "warning": "#fbbf24",
+          "error": "#f87171",
+        },
+      },
     ],
   },
 };

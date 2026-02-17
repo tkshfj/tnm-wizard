@@ -1,17 +1,31 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="medical">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>診断文</title>
+  <script>
+    (function(){
+      var m = localStorage.getItem('tnm-wizard-theme') || 'auto';
+      var t = m === 'dark' ? 'medical-dark'
+            : m === 'light' ? 'medical'
+            : window.matchMedia('(prefers-color-scheme:dark)').matches
+              ? 'medical-dark' : 'medical';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', path='output.css') }}">
+  <script type="module" src="{{ url_for('static', path='theme.js') }}"></script>
   <script type="module" src="{{ url_for('static', path='copy.js') }}"></script>
 </head>
 <body class="bg-base-200 min-h-screen p-6">
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-2xl lg:max-w-3xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">診断文</h1>
+      <button id="theme-toggle" class="btn btn-ghost btn-sm text-lg" aria-label="Toggle theme"></button>
+    </div>
     <div class="card bg-base-100 shadow-lg">
       <div class="card-body">
-        <h1 class="card-title text-2xl mb-4">診断文</h1>
         <textarea id="reportText" class="textarea textarea-bordered w-full" rows="10">{{ report_text }}</textarea>
         <div class="card-actions mt-4">
           <button type="button" id="copyBtn" class="btn btn-primary">クリップボードにコピー</button>

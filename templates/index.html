@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="medical">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TNM Wizard</title>
+  <script>
+    (function(){
+      var m = localStorage.getItem('tnm-wizard-theme') || 'auto';
+      var t = m === 'dark' ? 'medical-dark'
+            : m === 'light' ? 'medical'
+            : window.matchMedia('(prefers-color-scheme:dark)').matches
+              ? 'medical-dark' : 'medical';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', path='output.css') }}">
+  <script type="module" src="{{ url_for('static', path='theme.js') }}"></script>
 </head>
 <body class="bg-base-200 min-h-screen p-6">
   <div class="max-w-xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">TNM Wizard</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">TNM Wizard</h1>
+      <button id="theme-toggle" class="btn btn-ghost btn-sm text-lg" aria-label="Toggle theme"></button>
+    </div>
     <p class="mb-4">臓器を選択してください。</p>
     <ul class="menu bg-base-100 rounded-box w-full shadow">
       {% for organ in organs %}

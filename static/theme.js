@@ -1,0 +1,47 @@
+"use strict";
+const STORAGE_KEY = "tnm-wizard-theme";
+const ICONS = { auto: "\u{1F5A5}", light: "\u2600\uFE0F", dark: "\u{1F319}" };
+const CYCLE = { auto: "light", light: "dark", dark: "auto" };
+function getMode() {
+    const v = localStorage.getItem(STORAGE_KEY);
+    if (v === "light" || v === "dark")
+        return v;
+    return "auto";
+}
+function resolve(mode) {
+    if (mode === "light")
+        return "medical";
+    if (mode === "dark")
+        return "medical-dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "medical-dark"
+        : "medical";
+}
+function applyTheme(mode) {
+    document.documentElement.setAttribute("data-theme", resolve(mode));
+}
+function updateButton(mode) {
+    const btn = document.getElementById("theme-toggle");
+    if (btn)
+        btn.textContent = ICONS[mode];
+}
+// Apply immediately (also handled by inline script in <head> for FOUC prevention)
+let currentMode = getMode();
+applyTheme(currentMode);
+// React to OS preference changes when in auto mode
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (getMode() === "auto")
+        applyTheme("auto");
+});
+document.addEventListener("DOMContentLoaded", () => {
+    updateButton(currentMode);
+    const btn = document.getElementById("theme-toggle");
+    if (btn) {
+        btn.addEventListener("click", () => {
+            currentMode = CYCLE[currentMode];
+            localStorage.setItem(STORAGE_KEY, currentMode);
+            applyTheme(currentMode);
+            updateButton(currentMode);
+        });
+    }
+});

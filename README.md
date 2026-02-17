@@ -10,7 +10,7 @@ Currently supports **lung cancer** (肺癌取扱い規約第9版) with a synopti
 - Grade, STAS, pleural/vascular/lymphatic/perineural invasion
 - Resection margins (conditional on sublobar resection)
 - Lymph node metastasis by station
-- Immunohistochemistry (免疫染色), histologic description
+- Immunohistochemistry (IHC), histologic description
 - Automatic TNM staging with pT/pN/pM → stage lookup
 
 ## Tech Stack
