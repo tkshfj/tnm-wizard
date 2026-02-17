@@ -33,7 +33,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
     if (getMode() === "auto")
         applyTheme("auto");
 });
-document.addEventListener("DOMContentLoaded", () => {
+function init() {
     updateButton(currentMode);
     const btn = document.getElementById("theme-toggle");
     if (btn) {
@@ -44,4 +44,11 @@ document.addEventListener("DOMContentLoaded", () => {
             updateButton(currentMode);
         });
     }
-});
+}
+// Module scripts may run after DOMContentLoaded has already fired
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+}
+else {
+    init();
+}
