@@ -2,6 +2,17 @@
 
 A small intranet web application that converts structured input choices into standardized synoptic cancer pathology diagnostic paragraphs, in line with the Japanese General Rules for Clinical and Pathological Study of Cancer. Accessed from any client via a web browser.
 
+## Features
+
+Currently supports **lung cancer** (肺癌取扱い規約第9版) with a synoptic report covering:
+- Surgical procedure, tumor/invasion size, lobe
+- Histologic typing with mix table (AD subtypes with %, non-AD single selection)
+- Grade, STAS, pleural/vascular/lymphatic/perineural invasion
+- Resection margins (conditional on sublobar resection)
+- Lymph node metastasis by station
+- Immunohistochemistry (免疫染色), histologic description
+- Automatic TNM staging with pT/pN/pM → stage lookup
+
 ## Tech Stack
 
 - **Backend:** Python (FastAPI, Jinja2, PyYAML)

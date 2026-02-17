@@ -73,6 +73,15 @@ tnm_stage_table:
   "T*,N*,M1*": "Stage IVB"     # wildcards supported
 ```
 
+### Lung report template (lung_report.j2)
+
+The report template outputs a plain-text synoptic report. Key computed fields injected by the route handler:
+- `data.histologic_summary` — built from histologic_mix table rows (AD: "Type: subtype (%), ..." / non-AD: subtype label only)
+- `data.nodal_summary` — built from LN station positive/total fields
+- `data.stage` — derived from pT/pN/pM via `tnm_stage_table`
+
+Other fields (e.g. `data.ihc`, `data.description`, `data.grade`) pass through directly from form input via `extract_fields()`.
+
 ### Conventions
 
 - Field names use English; UI labels use Japanese
