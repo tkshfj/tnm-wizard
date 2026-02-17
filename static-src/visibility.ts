@@ -244,6 +244,8 @@ function enforceNonADSingleRowRule(mixRows: MixRowEls[]): void {
       r.typeSelect.value = "";
       r.subtypeSelect.value = "";
       r.pctInput.value = "";
+      r.pctInput.required = false;
+      r.pctInput.disabled = true;
     }
   }
 }

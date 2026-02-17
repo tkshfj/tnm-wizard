@@ -202,6 +202,8 @@ function enforceNonADSingleRowRule(mixRows) {
             r.typeSelect.value = "";
             r.subtypeSelect.value = "";
             r.pctInput.value = "";
+            r.pctInput.required = false;
+            r.pctInput.disabled = true;
         }
     }
 }
